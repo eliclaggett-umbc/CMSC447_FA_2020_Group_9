@@ -1,0 +1,14 @@
+{
+  "name": "cmsc-447-project",
+  "version": "1.0.0",
+  "description": "Demo",
+  "author": "Eli Claggett <elijahc1@umbc.edu>,",
+  "license": "MIT",
+  "main": "app.js",
+  "scripts": {
+    "start": "npm install && node app.js"
+  },
+  "dependencies": {
+    "express": "^4.17"
+  }
+}
