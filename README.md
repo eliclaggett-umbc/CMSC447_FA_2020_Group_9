@@ -23,7 +23,7 @@ To install Docker Compose, please follow the instructions for your operating sys
 
 First, clone this repository onto your system:
 ```bash
-git clone PLACEHOLDER
+git clone git@github.com:eliclaggett-umbc/CMSC447_FA_2020_Group_9.git .
 ```
 Then, open a terminal in the root directory of the project and run the command:
 ```bash
