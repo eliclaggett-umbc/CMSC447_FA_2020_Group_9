@@ -1,24 +1,28 @@
 version: '3'
 services:
-    nodejs:
+    webserver:
       image: node:14
       environment:
         - NODE_ENV=production
       volumes:
         - ./app:/home/node/app
       ports:
-        - 8080:8080
+        - 8081:8080
       command: "npm start"
       user: node
       working_dir: /home/node/app
       
-    mysql:
-      image: mysql:8
+    database:
+      image: mongo:3.6
       environment:
-        - MYSQL_DATABASE=db
-        - MYSQL_ROOT_PASSWORD=root
-        - MYSQL_USER=user
-        - MYSQL_PASSWORD=pass
+        MONGO_INITDB_ROOT_USERNAME: root
+        MONGO_INITDB_ROOT_PASSWORD: example
       volumes:
-            - ./data/db/mysql:/var/lib/mysql
-      user: mysql
+            - ./data/db/mongo:/data/db
+
+    mapserver:
+      image: klokantech/openmaptiles-server:1.10
+      ports:
+        - 8080:80
+      volumes:
+        - ./data/map:/data

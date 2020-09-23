@@ -4,9 +4,30 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Test Page</title>
+	<script src="assets/js/require.js"></script>
+	<link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+	<link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body>
 	<h1>Test Page</h1>
 	<p>The web server is working.</p>
+	<div id="map-container"></div>
 </body>
+<script>
+	require(['/mapbox-gl/dist/mapbox-gl.js'], (mapboxgl) => {
+
+		fetch('http://localhost:8080/styles/positron/style.json')
+  	.then(response => response.json())
+		.then(style => {
+			console.log(style);
+			
+			var map = new mapboxgl.Map({
+				container: 'map-container',
+				style: style
+			});
+		});
+
+	});
+ 
+</script>
 </html>
