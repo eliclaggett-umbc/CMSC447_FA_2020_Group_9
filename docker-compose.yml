@@ -1,16 +1,13 @@
 version: '3'
 services:
     webserver:
-      image: node:14
+      build: app
       environment:
         - NODE_ENV=production
       volumes:
         - ./app:/home/node/app
       ports:
         - 8081:3000
-      command: "npm run dev"
-      user: node
-      working_dir: /home/node/app
       
     database:
       image: mongo:3.6
