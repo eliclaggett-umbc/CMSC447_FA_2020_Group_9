@@ -1,15 +1,16 @@
 {
-  "name": "cmsc-447-project",
-  "version": "1.0.0",
-  "description": "Demo",
-  "author": "Eli Claggett <elijahc1@umbc.edu>,",
-  "license": "MIT",
-  "main": "app.js",
+  "name": "learn-starter",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "start": "npm install && node app.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "express": "^4.17",
-    "mapbox-gl": "^1.12.0"
+    "mapbox-gl": "^1.12.0",
+    "next": "9.5.3",
+    "react": "16.13.1",
+    "react-dom": "16.13.1"
   }
 }
