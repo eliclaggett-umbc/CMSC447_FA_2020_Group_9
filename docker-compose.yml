@@ -10,12 +10,14 @@ services:
         - 8081:3000
       
     database:
-      image: mongo:3.6
+      image: postgres
       environment:
-        MONGO_INITDB_ROOT_USERNAME: root
-        MONGO_INITDB_ROOT_PASSWORD: example
+        POSTGRES_USERNAME: root
+        POSTGRES_PASSWORD: example
       volumes:
-            - ./data/db/mongo:/data/db
+            - ./data/db/postgres:/data/db
+      ports:
+        - 5432:5432
 
     mapserver:
       image: klokantech/openmaptiles-server:1.10
