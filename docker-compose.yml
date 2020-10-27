@@ -1,23 +1,32 @@
 version: '3'
 services:
     webserver:
+      container_name: webserver
       build: app
       environment:
         - NODE_ENV=production
+        - PGHOST=database
+        - PGUSER=root
+        - PGPASSWORD=example
+        - PGDATABASE=covid
+        - PGPORT=5432
       volumes:
         - ./app:/home/node/app
       ports:
         - 8081:3000
+      restart: always
       
     database:
       image: postgres
       environment:
-        POSTGRES_USERNAME: root
+        POSTGRES_USER: root
         POSTGRES_PASSWORD: example
+        POSTGRES_DB: covid
       volumes:
-            - ./data/db/postgres:/data/db
+        - database_data:/var/lib/postgresql/data
       ports:
         - 5432:5432
+      restart: always
 
     mapserver:
       image: klokantech/openmaptiles-server:1.10
@@ -25,3 +34,6 @@ services:
         - 8080:80
       volumes:
         - ./data/map:/data
+volumes:
+  database_data: {}
+
