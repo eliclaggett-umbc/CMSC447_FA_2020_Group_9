@@ -1,0 +1,83 @@
+
+
+.fontSize2 {
+    font-family: Roboto, Arial;
+    font-size: 1.1rem;
+}
+
+.searchComponent {
+    
+    margin: 3rem 5rem;
+    width: 60%;
+}
+
+.searchByButtons {
+    display: flex;
+    justify-content: space-between;
+    width: 40%;
+    max-width: 200px;
+    padding: 1em 0em 2em 0em;
+}
+
+.button {
+    background-color: transparent;
+    text-decoration: none;
+    border-style: none;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0.5em 0.3em;
+    outline: 0;
+}
+
+.searchByButton + .searchByButton {
+    margin-left: 2em;
+}
+
+.searchByButton {
+
+    border-bottom: 2px solid transparent;
+  color: black;
+
+}
+
+.searchByButton:hover {
+    border-bottom: 2px solid turquoise;
+}
+
+.searchByButton:active{
+    border-bottom: 2px solid turquoise;
+}
+
+.searchBox {
+    text-decoration: none;
+    border-style: none;
+    background-color: transparent;
+    border-bottom: 2px solid turquoise;
+    outline: 0;
+}
+
+
+.resultList {
+    display: flex;
+    flex-direction: column;
+    padding: .5em 0;
+    justify-content: flex-start;
+    width: 70%;
+}
+
+.resultListElement {
+    padding: .2em .3em;
+    margin: 0;
+    text-align: left;
+    border-bottom: 1px solid grey;
+}
+
+.resultListElement:hover{ 
+    border-bottom: 1px solid turquoise;
+    background-color: rgb(226, 226, 226);
+}
+
+.buttonActive {
+
+    border-bottom: 2px solid turquoise;
+}

@@ -2,6 +2,9 @@ import Head from 'next/head';
 import mapboxgl from 'mapbox-gl';
 import { useEffect, useRef } from 'react';
 import style from '../Home.module.css';
+import Search from './components/Search';
+
+//import buttonStyles from './components/Search.module.css';
 
 export default function Home() {
   
@@ -22,14 +25,17 @@ export default function Home() {
       <Head>
         <title>COVID-19 Prison Map</title>
         <link rel="icon" href="/favicon.ico" />
+        <style>{'body { background-color: rgb(250,250,250); }'}</style>
       </Head>
 
-      <main>
+      <main >
         <h1 className="title">
           COVID-19 Prison Map
         </h1>
         <p>The web server is working.</p>
         <div ref={mapContainer} className={style.mapContainer}></div>
+
+        <Search/>
       </main>
     </div>
   )
