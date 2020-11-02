@@ -41,3 +41,16 @@ When you're finished developing, in the root directory of the project run the co
 ```bash
 docker-compose down -v
 ```
+
+## Implementation Notes
+
+### Data Retrieval
+
+Sources:
+
+County Boundary Vector Tiles: https://gis-server.data.census.gov/arcgis/rest/services/Hosted/VT_2019_050_00_PY_D1/VectorTileServer/tile/
+
+Prison COVID Data: https://github.com/uclalawcovid19behindbars/data
+
+County COVID Data: https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/
+
