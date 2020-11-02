@@ -15,6 +15,40 @@ export default function Home() {
       container: mapContainer.current,
       style: 'http://localhost:8080/styles/positron/style.json'
     });
+
+    map.on("load", function() {
+      
+      // Load county boundaries
+      // TODO: Make this look better
+      map.addLayer({
+        id: "counties",
+        type: "fill",
+        source: {
+          type: "vector",
+          tiles: [
+            "https://gis-server.data.census.gov/arcgis/rest/services/Hosted/VT_2017_050_00_PY_D1/VectorTileServer/tile/{z}/{y}/{x}.pbf"
+          ]
+        },
+        "source-layer": "County",
+        paint: {
+          "fill-opacity": 0.6,
+          "fill-color": "blue"
+        }
+      });
+    });
+
+    map.on("click", "counties", function(e) {
+      // TODO: Remove this, just for debugging
+      console.log(e.features);
+      let coordinates = e.features[0].geometry.coordinates[0];
+
+      var bounds = coordinates.reduce(function (bounds, coord) {
+        return bounds.extend(coord);
+        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+      map.fitBounds(bounds, { padding: 20 });
+    });
+
     return () => {
       
     }
