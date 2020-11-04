@@ -50,7 +50,11 @@ Sources:
 
 County Boundary Vector Tiles: https://gis-server.data.census.gov/arcgis/rest/services/Hosted/VT_2019_050_00_PY_D1/VectorTileServer/tile/
 
-Prison COVID Data: https://github.com/uclalawcovid19behindbars/data
+Prison COVID Data: 
+https://raw.githubusercontent.com/uclalawcovid19behindbars/data/master/Adult%20Facility%20Counts/adult_facility_covid_counts_today_latest.csv
+https://docs.google.com/spreadsheets/d/1X6uJkXXS-O6eePLxw2e4JeRtM41uPZ2eRcOA_HkPVTk/gviz/tq?tqx=out:csv&sheet=COVID-19%20Jail%2FPrison%20Confirmed%20Cases%20and%20Deaths
 
-County COVID Data: https://usafacts.org/visualizations/coronavirus-covid-19-spread-map/
++ recidiviz
+
+County COVID Data: https://github.com/nytimes/covid-19-data
 
