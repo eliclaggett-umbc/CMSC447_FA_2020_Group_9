@@ -90,7 +90,7 @@ function App() {
 
     map.on("click", "counties", function(e) {
       // TODO: Remove this, just for debugging
-      console.log(e.features);
+      
       let coordinates = e.features[0].geometry.coordinates[0];
 
       var bounds = coordinates.reduce(function (bounds, coord) {

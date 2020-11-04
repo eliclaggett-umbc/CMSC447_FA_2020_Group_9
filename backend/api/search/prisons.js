@@ -18,7 +18,8 @@ module.exports = function handler(req, res) {
 
     if(req.method == "GET") {
         
-        query_string = `SELECT p.id, p.name, p.fips, c.name, c.state FROM prison p JOIN count c ON p.fips=c.fips WHERE p.name LIKE $1`;
+        query_string = `SELECT p.id, p.name, p.fips, c.name, c.state FROM prison p JOIN county c ON p.fips=c.fips WHERE p.name LIKE $1`;
+
         query_params.push('%' + request_params.search + '%');
         
         pool.query(query_string, query_params)
