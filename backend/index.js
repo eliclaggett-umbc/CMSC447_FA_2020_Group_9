@@ -4,10 +4,17 @@ const searchCounties = require('./api/search/counties.js');
 const searchPrisons = require('./api/search/prisons.js');
 const dataFetcher = require('./api/data_fetcher/fetch.js');
 const lastFetched = require('./api/data_fetcher/last_fetched.js');
+const geoJSONPrisons = require('./geojson/prisons.js');
 const stateRouter = require('./stateRouter.js');
 
 var express = require("express");
 var app = express();
+
+var cors = require('cors');
+corsOptions = {
+	origin: '*'
+}
+app.use(cors(corsOptions));
 
 app.listen(3000, () => {
  console.log("Server running on port 3000");
@@ -20,3 +27,7 @@ app.get("/api/fetch_data", dataFetcher);
 app.get("/api/last_fetched", lastFetched);
 app.get("/api/search/counties", searchCounties);
 app.get("/api/search/prisons", searchPrisons);
+
+
+
+app.get("/geojson/prisons", geoJSONPrisons);
