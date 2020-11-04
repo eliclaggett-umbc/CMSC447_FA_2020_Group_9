@@ -50,8 +50,7 @@ function App() {
           
           var color = colorScale(parseInt(row['sum_deaths'])).rgba();
           let colorString = 'rgba(' + color[0] + ', ' + color[1] + ', ' + color[2] + ', ' + color[3] + ')';
-           
-          matchExpression.push(row['fips'].toString(), colorString);
+          matchExpression.push(row['fips'].toString().padStart(5, '0'), colorString);
         }
         
         matchExpression.push('blue');
