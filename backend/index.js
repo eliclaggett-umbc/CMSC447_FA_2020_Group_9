@@ -6,6 +6,7 @@ const dataFetcher = require('./api/data_fetcher/fetch.js');
 const lastFetched = require('./api/data_fetcher/last_fetched.js');
 const geoJSONPrisons = require('./geojson/prisons.js');
 const stateRouter = require('./stateRouter.js');
+const pool = require('./api/db');
 
 var express = require("express");
 var app = express();
@@ -15,6 +16,24 @@ corsOptions = {
 	origin: '*'
 }
 app.use(cors(corsOptions));
+
+async function checkForDataUpdates(req, next) {
+	class FakeRes {
+		send(data) {
+			// Do nothing
+		}
+		constructor() {
+			// Do nothing
+		}
+	}
+
+	dataFetcher(req, new FakeRes());
+	next();
+}
+
+app.use(function (req, res, next) {
+  checkForDataUpdates(req, next);
+});
 
 app.listen(3000, () => {
  console.log("Server running on port 3000");

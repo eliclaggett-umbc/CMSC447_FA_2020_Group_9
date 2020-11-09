@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS prison_covid (
 );
 
 CREATE TABLE IF NOT EXISTS data_fetcher (
- last_fetched DATE
+ last_fetched DATE,
+ is_fetching BOOLEAN
 );
-INSERT INTO data_fetcher(last_fetched) VALUES ('2020-01-01');
+INSERT INTO data_fetcher(last_fetched, is_fetching) VALUES ('2020-01-01', false);
