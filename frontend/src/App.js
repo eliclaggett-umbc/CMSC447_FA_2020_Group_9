@@ -2,9 +2,12 @@ import logo from './logo.svg';
 import './App.css';
 import chroma from 'chroma-js';
 import mapboxgl from 'mapbox-gl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
 import Search from './components/Search';
+//import ChangeMap from './components/ChangeMap';
 
 //import buttonStyles from './components/Search.module.css';
 
@@ -105,6 +108,10 @@ function App() {
     }
   }, []);
 
+  const [startDate, setStartDate] = useState(new Date("2020/01/01"));
+  const [currDate, setCurrDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+
   return (
     <div className="container">
       
@@ -113,6 +120,38 @@ function App() {
         </h1>
         <p>The web server is working.</p>
         <div ref={mapContainer} className='mapContainer'></div>
+
+        {/* <ChangeMap
+          map={map}
+          bounds={bounds}
+          selected={endDate}
+          onChange={date => setEndDate(date)}
+          selectsEnd
+          startDate={startDate}
+          endDate={endDate}
+          minDate={startDate}
+          maxDate={currDate}
+        /> */}
+
+        <div className="container">
+          <p>
+            View COVID-19 Deaths or Cases
+          </p>
+          <button>View by Deaths</button>
+          <button>View by Cases</button>
+          <p>
+            Date of Accumulated COVID-19 Deaths
+          </p>
+          <DatePicker
+            selected={endDate}
+            onChange={date => setEndDate(date)}
+            selectsEnd
+            startDate={startDate}
+            endDate={endDate}
+            minDate={startDate}
+            maxDate={currDate}
+          />
+        </div>
 
         <Search/>
 
