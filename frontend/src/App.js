@@ -40,14 +40,12 @@ function App() {
       fetch('http://localhost:8082/api/counties?sum=true')
       .then(res => res.json())
       .then((result) => {
-
-        let values = [0,0];
+        let values = [];
         for (const row of result) {
-          if (values[1] < parseInt(row['sum_deaths']))
-            values[1] = parseInt(row['sum_deaths']);
+          values.push(parseInt(row['sum_deaths']));
         }
-        
-        let colorScale = chroma.scale(['rgba(255,255,255,0)','yellow','red', 'black']).domain(values, 'q', 5).correctLightness();
+
+        let colorScale = chroma.scale(['rgba(255,255,255,0)', 'rgba(255,255,0,0.1)', 'rgba(255,195,0,0.3)', 'rgba(199,0,57,0.7)', 'rgba(144,12,63,0.9)']).domain(chroma.limits(values, 'q', 5));
 
         for (const row of result) {
           
