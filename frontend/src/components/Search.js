@@ -27,6 +27,7 @@ export default class Search extends React.Component {
         fetch(`http://localhost:8082/api/search/${this.state.searchBy}?search=${e.target.value}`)
         .then(res => res.json())
         .then(result => {
+            // console.log(result);
             // put query results into matching county/prison array
             this.setState( this.state.searchBy == "counties" ? {countyElems: result} : {prisonElems: result})
             },
@@ -38,8 +39,8 @@ export default class Search extends React.Component {
             }
         )
 
-        console.log(this.state.countyElems)
-        console.log(this.state.searchBy)
+        // console.log(this.state.countyElems)
+        // console.log(this.state.searchBy)
     }
 
     render() {
@@ -77,5 +78,10 @@ export default class Search extends React.Component {
 }
 
 const ResultListElement = (props) => {
-return(<button className={`${styles.button} ${styles.resultListElement}`}><p>{props.data.prison ? props.data.prison + ', ' : props.data.prison} {props.data.name + ', '} {props.data.state}</p></button>)
+    // console.log(props);
+return(
+<button className={`${styles.button} ${styles.resultListElement}`}>
+    <p>{props.data.prison_name ? props.data.prison_name + ', ' + props.data.county_name + ' ' + props.data.state : props.data.name + ', ' + props.data.state}</p>
+</button>
+    )
 };
