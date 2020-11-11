@@ -8,26 +8,40 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import Search from './components/Search';
 import UpdateMap from './components/UpdateMap';
+import { render } from 'react-dom';
+
+import GLOBAL from './global.js'
 
 //import buttonStyles from './components/Search.module.css';
 
 //const mapContainer = useRef(null);
 //const mapContainer = React.createRef();
 
-function App() {
+export default class App extends React.Component {
   
-  let mapContainer = useRef('map');
-  //let mapContainer = React.createRef();
-  let mapContainer1 = useRef('map1');
+  constructor(props) {
+    super(props);
+    this.state = {
+    mapContainer: React.createRef(),
+    startDate: new Date("2020/01/01"),
+    currDate: new Date(),
+    endDate: new Date()
+    };
+    this.handleChange = this.handleChange.bind(this);
 
-  const [startDate, setStartDate] = useState(new Date("2020/01/01"));
-  const [currDate, setCurrDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+    GLOBAL.myScope = this;
+  }
+  //let mapContainer = useRef('map');
+  //let mapContainer = React.createRef();
+  //let allMaps = [];
+
+  // const [startDate, setStartDate] = useState(new Date("2020/01/01"));
+  // const [currDate, setCurrDate] = useState(new Date());
+  // const [endDate, setEndDate] = useState(new Date());
 
   //mapboxgl.accessToken = "";
-
-  useEffect(() => {
-
+  //useEffect(() => {
+  componentDidMount() {
     // Fix visual glitch from OpenMapTiles not showing anything for tiles that weren't downloaded
     const bounds = [
       -125.3321,
@@ -38,12 +52,25 @@ function App() {
 //container: 'map',
 
     //let temp = mapContainer; mapContainer = mapContainer1; mapContainer1 = temp;
+    //console.log(allMaps);
+    // if (allMaps.length > 0) {allMaps.pop().remove();}
+
+    GLOBAL.myScope.setState({something: true});
+
+    GLOBAL.myScope.setState({crap: new mapboxgl.Map({
+      container: this.state.mapContainer.current,
+      style: 'http://localhost:8080/styles/positron/style.json',
+      maxBounds: bounds
+    })});
 
     const map = new mapboxgl.Map({
-      container: mapContainer.current,
+      container: this.state.mapContainer.current,
       style: 'http://localhost:8080/styles/positron/style.json',
       maxBounds: bounds
     });
+
+    // allMaps.push(map);
+    // console.log(allMaps);
 
     //useEffect(() => {console.log("Works");}, [endDate]);
 
@@ -54,9 +81,9 @@ function App() {
 
       let matchExpression = ['match', ['get', 'GEOID']];
 
-      let day = endDate.getDate(), month = endDate.getMonth(), year = endDate.getFullYear();
-      let searchDate = year + "-" + month + "-" + day;
-      console.log(searchDate);
+      //let day = this.state.endDate.getDate(), month = this.state.endDate.getMonth(), year = this.state.endDate.getFullYear();
+      //let searchDate = year + "-" + month + "-" + day;
+      //console.log(searchDate);
 
       fetch('http://localhost:8082/api/counties?sum=true')
       .then(res => res.json())
@@ -124,10 +151,27 @@ function App() {
 
       map.fitBounds(bounds, { padding: 20 });
       //debug
-      map.remove();
+      // map.remove();
     });
-  }, [endDate]);
+  }
+    //endDate.onChange = map.remove();
+  //}, [endDate]);
 
+  setEndDate(e) {
+    this.setState({endDate: e});
+    //console.log(something);
+    //console.log(crap); 
+    //map.remove();
+  }
+
+  handleChange(e) {
+    //console.log(crap); console.log(something);
+    console.log(GLOBAL.myScope.state.something);
+    console.log(GLOBAL.myScope.state.crap);
+    GLOBAL.myScope.state.crap.remove();
+  }
+
+  render() {
 
   return (
     <div className="container">
@@ -136,7 +180,7 @@ function App() {
           COVID-19 Prison Map
         </h1>
         <p>The web server is working.</p>
-        <div ref={mapContainer} className='mapContainer'></div>
+        <div ref={this.state.mapContainer} className='mapContainer'></div>
         {/* <div ref={el => mapContainer = el} className='mapContainer'></div> */}
         {/* <div ref='map' className='mapContainer'></div> */}
         {/* <div id='map' className='mapContainer'></div> */}
@@ -160,13 +204,13 @@ function App() {
             Date of Accumulated COVID-19 Deaths
           </p>
           <DatePicker
-            selected={endDate}
-            onChange={(date) => {setEndDate(date); console.log(date);}}
+            selected={this.state.endDate}
+            onChange={(date) => {this.handleChange(date); console.log(date);}}
             selectsEnd
-            startDate={startDate}
-            endDate={endDate}
-            minDate={startDate}
-            maxDate={currDate}
+            startDate={this.state.startDate}
+            endDate={this.state.endDate}
+            minDate={this.state.startDate}
+            maxDate={this.state.currDate}
           />
         </div>
 
@@ -175,5 +219,5 @@ function App() {
     </div>
   )
 }
-
-export default App;
+}
+//export default App;
