@@ -9,10 +9,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import Search from './components/Search';
 import { render } from 'react-dom';
 
-//import buttonStyles from './components/Search.module.css';
-
 export default class App extends React.Component {
-  
+  // Initialize state and props, bind functions
   constructor(props) {
     super(props);
     this.state = {
@@ -28,16 +26,8 @@ export default class App extends React.Component {
     this.handleDateChange = this.handleDateChange.bind(this);
     this.handleCovidTypeChange = this.handleCovidTypeChange.bind(this);
   }
-  //let mapContainer = useRef('map');
-  //let mapContainer = React.createRef();
-  //let allMaps = [];
 
-  // const [startDate, setStartDate] = useState(new Date("2020/01/01"));
-  // const [currDate, setCurrDate] = useState(new Date());
-  // const [endDate, setEndDate] = useState(new Date());
-
-  //mapboxgl.accessToken = "";
-  //useEffect(() => {
+  // Make sure the container is available before using it for a map
   componentDidMount() {
     // Fix visual glitch from OpenMapTiles not showing anything for tiles that weren't downloaded
     const bounds = [
@@ -56,10 +46,8 @@ export default class App extends React.Component {
     // Get day, month, and year from 
     let day = this.state.endDate.getDate(); let month = this.state.endDate.getMonth() + 1; let year = this.state.endDate.getFullYear();
     let searchDate = year + "-" + month + "-" + day;
-    //console.log(searchDate);
-    //console.log(this.state.endDate);
 
-    // get the type of covid data to use locally
+    // Get the type of covid data to use locally
     let covidData = this.state.covidType;
 
     map.on("load", function() {
@@ -71,16 +59,13 @@ export default class App extends React.Component {
 
       // Add date to string
       let toFetch = 'http://localhost:8082/api/counties?sum=true&date=' + searchDate + '';
-      //console.log(toFetch);
 
       fetch(toFetch)
       .then(res => res.json())
       .then((result) => {
         let values = [];
 
-        //console.log(this.state.covidType);
-
-        try { // sum_deaths
+        try { // Prevent program from crashing if fetch doesn't return anything
           for (const row of result) {
             values.push(parseInt(row[covidData]));
           }
@@ -146,15 +131,12 @@ export default class App extends React.Component {
         }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
         map.fitBounds(bounds, { padding: 20 });
-      //debug
-      // map.remove();
     });
 
     this.setState({aMap: map});
   }
-    //endDate.onChange = map.remove();
-  //}, [endDate]);
 
+  // Only explicitly call to create a new map if the map has been removed
   componentDidUpdate() {if (this.state.aMap === undefined) {this.componentDidMount();}}
 
   handleCovidTypeChange = () => {
@@ -166,10 +148,10 @@ export default class App extends React.Component {
       console.log("Error: Map not removed (most likely there is no map available to remove)");
     }
 
+    // Change state to display updated info
     let nextCovidType = (this.state.covidType === 'sum_deaths') ? 'sum_cases' : 'sum_deaths';
-    let nextCovidButtonText = (this.state.covidType === 'sum_deaths') ? "View COVID-19 Statistics by Cases" : "View COVID-19 Statistics by Deaths";
+    let nextCovidButtonText = (this.state.covidType === 'sum_deaths') ? "View COVID-19 Statistics by Deaths" : "View COVID-19 Statistics by Cases";
     this.setState({aMap: undefined, covidType: nextCovidType, covidButtonText: nextCovidButtonText});
-    // this.state.covidType === 'sum_deaths')
   }
 
   handleDateChange = (e) => {
@@ -186,7 +168,6 @@ export default class App extends React.Component {
   }
 
   render() {
-    //const {buttonText} = this.state.covidButtonText;
 
   return (
     <div className="container">
@@ -196,18 +177,6 @@ export default class App extends React.Component {
         </h1>
         <p>The web server is working.</p>
         <div ref={this.state.mapContainer} className='mapContainer'></div>
-        {/* <div ref={el => mapContainer = el} className='mapContainer'></div> */}
-        {/* <div ref='map' className='mapContainer'></div> */}
-        {/* <div id='map' className='mapContainer'></div> */}
-        {/* <UpdateMap
-          selected={endDate}
-          onChange={(date) => {setEndDate(date);}}
-          startDate={startDate}
-          endDate={endDate}
-          minDate={startDate}
-          maxDate={currDate}
-        /> */}
-        {/* <UpdateMap/> */}
 
         <div className="container">
           <p>
@@ -236,4 +205,3 @@ export default class App extends React.Component {
   )
 }
 }
-//export default App;
