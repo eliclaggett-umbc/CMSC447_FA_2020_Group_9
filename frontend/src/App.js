@@ -9,12 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Search from './components/Search';
 import { render } from 'react-dom';
 
-import GLOBAL from './global.js'
-
 //import buttonStyles from './components/Search.module.css';
-
-//const mapContainer = useRef(null);
-//const mapContainer = React.createRef();
 
 export default class App extends React.Component {
   
@@ -25,13 +20,13 @@ export default class App extends React.Component {
     startDate: new Date("2020/01/01"),
     currDate: new Date(),
     endDate: new Date(),
+    covidType: 'sum_deaths',
+    covidButtonText: "View COVID-19 Statistics by Cases",
     aMap: undefined
     };
 
-    this.setEndDate = this.setEndDate.bind(this);
     this.handleDateChange = this.handleDateChange.bind(this);
-
-    GLOBAL.myScope = this;
+    this.handleCovidTypeChange = this.handleCovidTypeChange.bind(this);
   }
   //let mapContainer = useRef('map');
   //let mapContainer = React.createRef();
@@ -58,10 +53,14 @@ export default class App extends React.Component {
       maxBounds: bounds
     });
 
-    let day = this.state.endDate.getDate(); let month = this.state.endDate.getMonth(); let year = this.state.endDate.getFullYear();
+    // Get day, month, and year from 
+    let day = this.state.endDate.getDate(); let month = this.state.endDate.getMonth() + 1; let year = this.state.endDate.getFullYear();
     let searchDate = year + "-" + month + "-" + day;
-    console.log(searchDate);
-    console.log(this.state.endDate);
+    //console.log(searchDate);
+    //console.log(this.state.endDate);
+
+    // get the type of covid data to use locally
+    let covidData = this.state.covidType;
 
     map.on("load", function() {
       // Hide watermark from the free version of OpenMapTiles
@@ -70,23 +69,31 @@ export default class App extends React.Component {
 
       let matchExpression = ['match', ['get', 'GEOID']];
 
-      //let day = this.state.endDate.getDate(), month = this.state.endDate.getMonth(), year = this.state.endDate.getFullYear();
-      //let searchDate = year + "-" + month + "-" + day;
-      //console.log(this.state.startDate);
+      // Add date to string
+      let toFetch = 'http://localhost:8082/api/counties?sum=true&date=' + searchDate + '';
+      //console.log(toFetch);
 
-      fetch('http://localhost:8082/api/counties?sum=true')
+      fetch(toFetch)
       .then(res => res.json())
       .then((result) => {
         let values = [];
-        for (const row of result) {
-          values.push(parseInt(row['sum_deaths']));
+
+        //console.log(this.state.covidType);
+
+        try { // sum_deaths
+          for (const row of result) {
+            values.push(parseInt(row[covidData]));
+          }
+        } catch(e) {
+          console.log("Fetcher returned no data");
+          return;
         }
 
         let colorScale = chroma.scale(['rgba(255,255,255,0)', 'rgba(255,255,0,0.1)', 'rgba(255,195,0,0.3)', 'rgba(199,0,57,0.7)', 'rgba(144,12,63,0.9)']).domain(chroma.limits(values, 'q', 5));
 
         for (const row of result) {
           
-          var color = colorScale(parseInt(row['sum_deaths'])).rgba();
+          var color = colorScale(parseInt(row[covidData])).rgba();
           let colorString = 'rgba(' + color[0] + ', ' + color[1] + ', ' + color[2] + ', ' + color[3] + ')';
           matchExpression.push(row['fips'].toString().padStart(5, '0'), colorString);
         }
@@ -144,46 +151,42 @@ export default class App extends React.Component {
     });
 
     this.setState({aMap: map});
-    //GLOBAL.myScope.setState({myMap: map});
   }
     //endDate.onChange = map.remove();
   //}, [endDate]);
 
   componentDidUpdate() {if (this.state.aMap === undefined) {this.componentDidMount();}}
 
-  setEndDate(e, callback) {
-    this.setState({endDate: e});
-    //console.log(something);
-    //console.log(crap); 
-    //map.remove();
-    callback();
-  }
-
-  handleDateChange(e) {
-
-    //this.setState({endDate: e});
-
-    // Remove the map through global state
+  handleCovidTypeChange = () => {
+    // Remove the map through local state
     try{
       this.state.aMap.remove();
-      //this.setState({aMap: undefined});
-      //GLOBAL.myScope.state.myMap.remove();
-      //GLOBAL.myScope.setState({myMap: undefined});
-    }
-    catch{
+    } catch(e) {
       // Debug
       console.log("Error: Map not removed (most likely there is no map available to remove)");
-      //this.setState({aMap: undefined});
-      //GLOBAL.myScope.setState({myMap: undefined});
+    }
+
+    let nextCovidType = (this.state.covidType === 'sum_deaths') ? 'sum_cases' : 'sum_deaths';
+    let nextCovidButtonText = (this.state.covidType === 'sum_deaths') ? "View COVID-19 Statistics by Cases" : "View COVID-19 Statistics by Deaths";
+    this.setState({aMap: undefined, covidType: nextCovidType, covidButtonText: nextCovidButtonText});
+    // this.state.covidType === 'sum_deaths')
+  }
+
+  handleDateChange = (e) => {
+    // Remove the map through local state
+    try{
+      this.state.aMap.remove();
+    } catch (e){
+      // Debug
+      console.log("Error: Map not removed (most likely there is no map available to remove)");
     }
 
     // Make sure componentDidMount is only called after endDate is changed
     this.setState({aMap: undefined, endDate: e});
-    //this.setEndDate(e, () => {this.componentDidMount();});
-    //this.componentDidMount();
   }
 
   render() {
+    //const {buttonText} = this.state.covidButtonText;
 
   return (
     <div className="container">
@@ -208,16 +211,17 @@ export default class App extends React.Component {
 
         <div className="container">
           <p>
-            View COVID-19 Deaths or Cases
+            Toggle COVID-19 Data Type
           </p>
-          <button>View by Deaths</button>
-          <button>View by Cases</button>
+          <button onClick={() => {this.handleCovidTypeChange();}}>
+            {this.state.covidButtonText}
+          </button>
           <p>
-            Date of Accumulated COVID-19 Deaths
+            Date of Accumulated COVID-19 Information
           </p>
           <DatePicker
             selected={this.state.endDate}
-            onChange={(date) => {this.handleDateChange(date); console.log(date);}}
+            onChange={(date) => {this.handleDateChange(date);}}
             selectsEnd
             startDate={this.state.startDate}
             endDate={this.state.endDate}
