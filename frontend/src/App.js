@@ -7,7 +7,6 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
 import Search from './components/Search';
-import UpdateMap from './components/UpdateMap';
 import { render } from 'react-dom';
 
 import GLOBAL from './global.js'
@@ -25,8 +24,11 @@ export default class App extends React.Component {
     mapContainer: React.createRef(),
     startDate: new Date("2020/01/01"),
     currDate: new Date(),
-    endDate: new Date()
+    endDate: new Date(),
+    aMap: undefined
     };
+
+    this.setEndDate = this.setEndDate.bind(this);
     this.handleDateChange = this.handleDateChange.bind(this);
 
     GLOBAL.myScope = this;
@@ -49,19 +51,6 @@ export default class App extends React.Component {
       -65.7421,
       49.4325
     ];
-//container: 'map',
-
-    //let temp = mapContainer; mapContainer = mapContainer1; mapContainer1 = temp;
-    //console.log(allMaps);
-    // if (allMaps.length > 0) {allMaps.pop().remove();}
-
-    GLOBAL.myScope.setState({something: true});
-
-    // GLOBAL.myScope.setState({crap: new mapboxgl.Map({
-    //   container: this.state.mapContainer.current,
-    //   style: 'http://localhost:8080/styles/positron/style.json',
-    //   maxBounds: bounds
-    // })});
 
     const map = new mapboxgl.Map({
       container: this.state.mapContainer.current,
@@ -69,10 +58,11 @@ export default class App extends React.Component {
       maxBounds: bounds
     });
 
-    // allMaps.push(map);
-    // console.log(allMaps);
+    let day = this.state.endDate.getDate(); let month = this.state.endDate.getMonth(); let year = this.state.endDate.getFullYear();
+    let searchDate = year + "-" + month + "-" + day;
+    console.log(searchDate);
+    console.log(this.state.endDate);
 
-    //useEffect(() => {console.log("Works");}, [endDate]);
     map.on("load", function() {
       // Hide watermark from the free version of OpenMapTiles
       map.setPaintProperty('omt_watermark', 'text-color', 'rgba(0,0,0,0)');
@@ -82,7 +72,7 @@ export default class App extends React.Component {
 
       //let day = this.state.endDate.getDate(), month = this.state.endDate.getMonth(), year = this.state.endDate.getFullYear();
       //let searchDate = year + "-" + month + "-" + day;
-      //console.log(searchDate);
+      //console.log(this.state.startDate);
 
       fetch('http://localhost:8082/api/counties?sum=true')
       .then(res => res.json())
@@ -152,33 +142,45 @@ export default class App extends React.Component {
       //debug
       // map.remove();
     });
-    
-    GLOBAL.myScope.setState({myMap: map});
+
+    this.setState({aMap: map});
+    //GLOBAL.myScope.setState({myMap: map});
   }
     //endDate.onChange = map.remove();
   //}, [endDate]);
 
-  setEndDate(e) {
+  componentDidUpdate() {if (this.state.aMap === undefined) {this.componentDidMount();}}
+
+  setEndDate(e, callback) {
     this.setState({endDate: e});
     //console.log(something);
     //console.log(crap); 
     //map.remove();
+    callback();
   }
 
   handleDateChange(e) {
-    //console.log(crap); console.log(something);
-    //console.log(GLOBAL.myScope.state.something);
-    //console.log(GLOBAL.myScope.state.crap);
-    //if (GLOBAL.myScope.state.crap !== undefined) {GLOBAL.myScope.state.crap.remove(); GLOBAL.myScope.state.setState({crap: undefined});}
+
+    //this.setState({endDate: e});
+
+    // Remove the map through global state
     try{
-      GLOBAL.myScope.state.myMap.remove();
-      GLOBAL.myScope.setState({myMap: undefined});
+      this.state.aMap.remove();
+      //this.setState({aMap: undefined});
+      //GLOBAL.myScope.state.myMap.remove();
+      //GLOBAL.myScope.setState({myMap: undefined});
     }
     catch{
-      //console.log("Didn't work");
-      GLOBAL.myScope.setState({myMap: undefined});
+      // Debug
+      console.log("Error: Map not removed (most likely there is no map available to remove)");
+      //this.setState({aMap: undefined});
+      //GLOBAL.myScope.setState({myMap: undefined});
     }
-    this.componentDidMount();
+
+    // Make sure componentDidMount is only called after endDate is changed
+    this.setState({aMap: undefined, endDate: e});
+    //this.setEndDate(e, () => {this.componentDidMount();});
+    //this.componentDidMount();
   }
 
   render() {
