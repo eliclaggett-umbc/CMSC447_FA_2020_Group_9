@@ -27,7 +27,7 @@ export default class App extends React.Component {
     currDate: new Date(),
     endDate: new Date()
     };
-    this.handleChange = this.handleChange.bind(this);
+    this.handleDateChange = this.handleDateChange.bind(this);
 
     GLOBAL.myScope = this;
   }
@@ -57,11 +57,11 @@ export default class App extends React.Component {
 
     GLOBAL.myScope.setState({something: true});
 
-    GLOBAL.myScope.setState({crap: new mapboxgl.Map({
-      container: this.state.mapContainer.current,
-      style: 'http://localhost:8080/styles/positron/style.json',
-      maxBounds: bounds
-    })});
+    // GLOBAL.myScope.setState({crap: new mapboxgl.Map({
+    //   container: this.state.mapContainer.current,
+    //   style: 'http://localhost:8080/styles/positron/style.json',
+    //   maxBounds: bounds
+    // })});
 
     const map = new mapboxgl.Map({
       container: this.state.mapContainer.current,
@@ -73,7 +73,6 @@ export default class App extends React.Component {
     // console.log(allMaps);
 
     //useEffect(() => {console.log("Works");}, [endDate]);
-
     map.on("load", function() {
       // Hide watermark from the free version of OpenMapTiles
       map.setPaintProperty('omt_watermark', 'text-color', 'rgba(0,0,0,0)');
@@ -149,10 +148,12 @@ export default class App extends React.Component {
         return bounds.extend(coord);
         }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
-      map.fitBounds(bounds, { padding: 20 });
+        map.fitBounds(bounds, { padding: 20 });
       //debug
       // map.remove();
     });
+    
+    GLOBAL.myScope.setState({myMap: map});
   }
     //endDate.onChange = map.remove();
   //}, [endDate]);
@@ -164,11 +165,20 @@ export default class App extends React.Component {
     //map.remove();
   }
 
-  handleChange(e) {
+  handleDateChange(e) {
     //console.log(crap); console.log(something);
-    console.log(GLOBAL.myScope.state.something);
-    console.log(GLOBAL.myScope.state.crap);
-    GLOBAL.myScope.state.crap.remove();
+    //console.log(GLOBAL.myScope.state.something);
+    //console.log(GLOBAL.myScope.state.crap);
+    //if (GLOBAL.myScope.state.crap !== undefined) {GLOBAL.myScope.state.crap.remove(); GLOBAL.myScope.state.setState({crap: undefined});}
+    try{
+      GLOBAL.myScope.state.myMap.remove();
+      GLOBAL.myScope.setState({myMap: undefined});
+    }
+    catch{
+      //console.log("Didn't work");
+      GLOBAL.myScope.setState({myMap: undefined});
+    }
+    this.componentDidMount();
   }
 
   render() {
@@ -205,7 +215,7 @@ export default class App extends React.Component {
           </p>
           <DatePicker
             selected={this.state.endDate}
-            onChange={(date) => {this.handleChange(date); console.log(date);}}
+            onChange={(date) => {this.handleDateChange(date); console.log(date);}}
             selectsEnd
             startDate={this.state.startDate}
             endDate={this.state.endDate}
