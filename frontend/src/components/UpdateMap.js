@@ -1,32 +1,36 @@
-import logo from './logo.svg';
-import './App.css';
+import logo from '../logo.svg';
+import '../App.css';
 import chroma from 'chroma-js';
 import mapboxgl from 'mapbox-gl';
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
-import Search from './components/Search';
-import UpdateMap from './components/UpdateMap';
+//import Search from '../components/Search';
+//import ChangeMap from './components/ChangeMap';
 
 //import buttonStyles from './components/Search.module.css';
 
-//const mapContainer = useRef(null);
-//const mapContainer = React.createRef();
+export default class UpdateMap extends React.Component {
 
-function App() {
-  
-  let mapContainer = useRef('map');
-  //let mapContainer = React.createRef();
-  let mapContainer1 = useRef('map1');
+    constructor(props) {
+        super(props);
+        this.state = {
+            isLoaded: false,
+            searchBy: "counties",
+            countyElems: [],
+            prisonElems: [],
+            startDate: new Date("2020/01/01"),
+            currDate: new Date(),
+            endDate: new Date()
+        }
+        this.mapContainer = React.createRef();
+    }
 
-  const [startDate, setStartDate] = useState(new Date("2020/01/01"));
-  const [currDate, setCurrDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+    setEndDate(e) {this.state.endDate = e;}
 
-  //mapboxgl.accessToken = "";
-
-  useEffect(() => {
+    componentDidMount() {
 
     // Fix visual glitch from OpenMapTiles not showing anything for tiles that weren't downloaded
     const bounds = [
@@ -35,12 +39,8 @@ function App() {
       -65.7421,
       49.4325
     ];
-//container: 'map',
-
-    //let temp = mapContainer; mapContainer = mapContainer1; mapContainer1 = temp;
-
     const map = new mapboxgl.Map({
-      container: mapContainer.current,
+      container: this.mapContainer.current,
       style: 'http://localhost:8080/styles/positron/style.json',
       maxBounds: bounds
     });
@@ -54,7 +54,7 @@ function App() {
 
       let matchExpression = ['match', ['get', 'GEOID']];
 
-      let day = endDate.getDate(), month = endDate.getMonth(), year = endDate.getFullYear();
+      let day = this.state.endDate.getDate(), month = this.state.endDate.getMonth(), year = this.state.endDate.getFullYear();
       let searchDate = year + "-" + month + "-" + day;
       console.log(searchDate);
 
@@ -123,11 +123,10 @@ function App() {
         }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
 
       map.fitBounds(bounds, { padding: 20 });
-      //debug
-      map.remove();
     });
-  }, [endDate]);
+    }
 
+    render() {
 
   return (
     <div className="container">
@@ -136,10 +135,8 @@ function App() {
           COVID-19 Prison Map
         </h1>
         <p>The web server is working.</p>
-        <div ref={mapContainer} className='mapContainer'></div>
-        {/* <div ref={el => mapContainer = el} className='mapContainer'></div> */}
-        {/* <div ref='map' className='mapContainer'></div> */}
-        {/* <div id='map' className='mapContainer'></div> */}
+        <div ref={this.mapContainer} className='mapContainer'></div>
+
         {/* <UpdateMap
           selected={endDate}
           onChange={(date) => {setEndDate(date);}}
@@ -148,7 +145,6 @@ function App() {
           minDate={startDate}
           maxDate={currDate}
         /> */}
-        {/* <UpdateMap/> */}
 
         <div className="container">
           <p>
@@ -160,20 +156,41 @@ function App() {
             Date of Accumulated COVID-19 Deaths
           </p>
           <DatePicker
-            selected={endDate}
-            onChange={(date) => {setEndDate(date); console.log(date);}}
+            selected={this.state.endDate}
+            onChange={date => this.setEndDate(date)}
             selectsEnd
-            startDate={startDate}
-            endDate={endDate}
-            minDate={startDate}
-            maxDate={currDate}
+            startDate={this.state.startDate}
+            endDate={this.state.endDate}
+            minDate={this.state.startDate}
+            maxDate={this.state.currDate}
           />
         </div>
 
-        <Search/>
+        {/* <Search/> */}
 
     </div>
   )
-}
+//     return (
 
-export default App;
+//         <div className="container">
+//           <p>
+//             View COVID-19 Deaths or Cases
+//           </p>
+//           <button>View by Deaths</button>
+//           <button>View by Cases</button>
+//           <p>
+//             Date of Accumulated COVID-19 Deaths
+//           </p>
+//           {/* <DatePicker
+//             selected={props.selected}
+//             onChange={props.onChange}
+//             selectsEnd
+//             startDate={props.startDate}
+//             endDate={props.endDate}
+//             minDate={props.minDate}
+//             maxDate={props.maxDate}
+//           /> */}
+//         </div>
+//   )}
+}
+}
