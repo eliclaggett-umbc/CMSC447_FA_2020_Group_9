@@ -167,7 +167,7 @@ export default class App extends React.Component {
   handleDateChange = (date) => {
     this.setState({endDate: date});
 
-    calculateCountyColorsForDate(this.state.endDate, this.state.covidType).then( (countyColors) => {
+    calculateCountyColorsForDate(date, this.state.covidType).then( (countyColors) => {
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
   }
