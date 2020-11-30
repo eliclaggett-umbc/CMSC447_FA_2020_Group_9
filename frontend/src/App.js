@@ -160,7 +160,7 @@ export default class App extends React.Component {
     
     this.setState({covidType: nextCovidType, covidButtonText: nextCovidButtonText});
 
-    calculateCountyColorsForDate(this.state.endDate, this.state.covidType).then( (countyColors) => {
+    calculateCountyColorsForDate(this.state.endDate, nextCovidType).then( (countyColors) => {
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
   }
