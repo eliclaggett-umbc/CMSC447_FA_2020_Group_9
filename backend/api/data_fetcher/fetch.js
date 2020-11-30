@@ -254,12 +254,12 @@ module.exports = async function handler(req, res) {
 			queryParams.push(
 				prison['id'],
 				match['Date'],
-				match['Residents.Tested'].length > 0 && match['Residents.Tested'] != 'NA' ? match['Residents.Tested'] : 0,
-				match['Residents.Confirmed'].length > 0 && match['Residents.Confirmed'] != 'NA' ? match['Residents.Confirmed'] : 0,
-				match['Resident.Deaths'].length > 0 && match['Resident.Deaths'] != 'NA' ? match['Resident.Deaths'] : 0,
-				match['Staff.Tested'].length > 0 && match['Staff.Tested'] != 'NA' ? match['Staff.Tested'] : 0,
-				match['Staff.Confirmed'].length > 0 && match['Staff.Confirmed'] != 'NA' ? match['Staff.Confirmed'] : 0,
-				match['Staff.Deaths'].length > 0 && match['Staff.Deaths'] != 'NA' ? match['Staff.Deaths'] : 0
+				match['Residents.Tested'] && match['Residents.Tested'] != 'NA' ? match['Residents.Tested'] : 0,
+				match['Residents.Confirmed'] && match['Residents.Confirmed'] != 'NA' ? match['Residents.Confirmed'] : 0,
+				match['Resident.Deaths'] && match['Resident.Deaths'] != 'NA' ? match['Resident.Deaths'] : 0,
+				match['Staff.Tested'] && match['Staff.Tested'] != 'NA' ? match['Staff.Tested'] : 0,
+				match['Staff.Tested'] && match['Staff.Confirmed'] != 'NA' ? match['Staff.Confirmed'] : 0,
+				match['Staff.Tested'] && match['Staff.Deaths'] != 'NA' ? match['Staff.Deaths'] : 0
 			);
 			rowCount++;
 		}

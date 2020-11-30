@@ -9,6 +9,53 @@ import "react-datepicker/dist/react-datepicker.css";
 import Search from './components/Search';
 import { render } from 'react-dom';
 
+
+async function calculateCountyColorsForDate(date, covidType) {
+  let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
+  let searchDate = year + "-" + month + "-" + day;
+  
+  let matchExpression = ['match', ['get', 'GEOID']];
+
+  // Add date to string
+  let toFetch = 'http://localhost:8082/api/counties?sum=true&date=' + searchDate + '';
+  
+  try {
+    let res = await fetch(toFetch);
+    let result = await res.json();
+    let values = [];
+
+    try { // Prevent program from crashing if fetch doesn't return anything
+      for (const row of result) {
+        values.push(parseInt(row[covidType]));
+      }
+    } catch(e) {
+      console.log("Fetcher returned no data");
+      return;
+    }
+
+    let colorScale = chroma.scale(['rgba(255,255,255,0)', 'rgba(255,255,0,0.1)', 'rgba(255,195,0,0.3)', 'rgba(199,0,57,0.7)', 'rgba(144,12,63,0.9)']).domain(chroma.limits(values, 'q', 5));
+
+    for (const row of result) {
+      
+      var color = colorScale(parseInt(row[covidType])).rgba();
+      let colorString = 'rgba(' + color[0] + ', ' + color[1] + ', ' + color[2] + ', ' + color[3] + ')';
+      matchExpression.push(row['fips'].toString().padStart(5, '0'), colorString);
+    }
+    if (matchExpression.length == 2) {
+      matchExpression.push(0, 'transparent');
+    }
+    matchExpression.push('transparent');
+    return matchExpression;
+  }
+  catch(err) {
+    console.log('Error getting retrieving county COVID data for date: ' + date);
+    console.log(err);
+    matchExpression.push(0, 'transparent');
+    matchExpression.push('transparent');
+    return matchExpression;
+  };
+}
+
 export default class App extends React.Component {
   // Initialize state and props, bind functions
   constructor(props) {
@@ -42,48 +89,14 @@ export default class App extends React.Component {
       style: 'http://localhost:8080/styles/positron/style.json',
       maxBounds: bounds
     });
-
-    // Get day, month, and year from 
-    let day = this.state.endDate.getDate(); let month = this.state.endDate.getMonth() + 1; let year = this.state.endDate.getFullYear();
-    let searchDate = year + "-" + month + "-" + day;
-
-    // Get the type of covid data to use locally
-    let covidData = this.state.covidType;
-
+    let endDate = this.state.endDate;
+    let covidType = this.state.covidType;
     map.on("load", function() {
       // Hide watermark from the free version of OpenMapTiles
       map.setPaintProperty('omt_watermark', 'text-color', 'rgba(0,0,0,0)');
       map.setPaintProperty('omt_watermark', 'text-halo-color', 'rgba(0,0,0,0)');
-
-      let matchExpression = ['match', ['get', 'GEOID']];
-
-      // Add date to string
-      let toFetch = 'http://localhost:8082/api/counties?sum=true&date=' + searchDate + '';
-
-      fetch(toFetch)
-      .then(res => res.json())
-      .then((result) => {
-        let values = [];
-
-        try { // Prevent program from crashing if fetch doesn't return anything
-          for (const row of result) {
-            values.push(parseInt(row[covidData]));
-          }
-        } catch(e) {
-          console.log("Fetcher returned no data");
-          return;
-        }
-
-        let colorScale = chroma.scale(['rgba(255,255,255,0)', 'rgba(255,255,0,0.1)', 'rgba(255,195,0,0.3)', 'rgba(199,0,57,0.7)', 'rgba(144,12,63,0.9)']).domain(chroma.limits(values, 'q', 5));
-
-        for (const row of result) {
-          
-          var color = colorScale(parseInt(row[covidData])).rgba();
-          let colorString = 'rgba(' + color[0] + ', ' + color[1] + ', ' + color[2] + ', ' + color[3] + ')';
-          matchExpression.push(row['fips'].toString().padStart(5, '0'), colorString);
-        }
-        
-        matchExpression.push('blue');
+      
+      calculateCountyColorsForDate(endDate, covidType).then( (countyColors) => {
 
         if (map.getLayer("counties")) {map.removeLayer("counties");}
         if (map.getLayer("pointLayer")) {map.removeLayer("pointLayer");}
@@ -100,7 +113,7 @@ export default class App extends React.Component {
           "source-layer": "County",
           paint: {
             "fill-opacity": 1,
-            "fill-color": matchExpression
+            "fill-color": countyColors
           }
         });
 
@@ -116,8 +129,8 @@ export default class App extends React.Component {
           'paint': {
             'circle-radius': 4,
             'circle-color': 'rgba(255,0,0,0.5)'
-            }
-          });
+          }
+        });
       });
     });
 
@@ -140,31 +153,23 @@ export default class App extends React.Component {
   componentDidUpdate() {if (this.state.aMap === undefined) {this.componentDidMount();}}
 
   handleCovidTypeChange = () => {
-    // Remove the map through local state
-    try{
-      this.state.aMap.remove();
-    } catch(e) {
-      // Debug
-      console.log("Error: Map not removed (most likely there is no map available to remove)");
-    }
-
     // Change state to display updated info
     let nextCovidType = (this.state.covidType === 'sum_deaths') ? 'sum_cases' : 'sum_deaths';
     let nextCovidButtonText = (this.state.covidType === 'sum_deaths') ? "View COVID-19 Statistics by Deaths" : "View COVID-19 Statistics by Cases";
-    this.setState({aMap: undefined, covidType: nextCovidType, covidButtonText: nextCovidButtonText});
+    
+    this.setState({covidType: nextCovidType, covidButtonText: nextCovidButtonText});
+
+    calculateCountyColorsForDate(this.state.endDate, this.state.covidType).then( (countyColors) => {
+      this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
+    });
   }
 
-  handleDateChange = (e) => {
-    // Remove the map through local state
-    try{
-      this.state.aMap.remove();
-    } catch (e){
-      // Debug
-      console.log("Error: Map not removed (most likely there is no map available to remove)");
-    }
+  handleDateChange = (date) => {
+    this.setState({endDate: date});
 
-    // Make sure componentDidMount is only called after endDate is changed
-    this.setState({aMap: undefined, endDate: e});
+    calculateCountyColorsForDate(this.state.endDate, this.state.covidType).then( (countyColors) => {
+      this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
+    });
   }
 
   render() {
