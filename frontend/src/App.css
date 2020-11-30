@@ -14,7 +14,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #082e46;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -31,7 +31,7 @@
 .mapContainer {
   height: 700px;
   width: 100%;
-  max-width: 1500px;
+  /* max-width: 1500px; */
 }
 
 @keyframes App-logo-spin {
@@ -40,5 +40,146 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+.app-header {
+  display: flex;
+  background-color: #082e46;
+  padding: 0px 150px;
+  color: white;
+}
+
+.app-title {
+  width: 20%;
+}
+
+.app-tab {
+  width: 80%;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+.header-search-input {
+  height: 21px;
+  margin-left: 10px;
+  border-radius: 5px;
+  padding: 3px 10px;
+}
+
+.header-search-input:focus {
+  outline: -webkit-focus-ring-color auto 0px;
+}
+
+.header-search-bar {
+  text-align: end;
+  padding: 10px;
+}
+
+.item-tab {
+  padding: 10px;
+  width: 50px;
+  text-align: center;
+  border-radius: 2px;
+}
+
+
+.item-tab:hover {
+  background-color: #1c5070;
+}
+
+.tab-group {
+  display: flex;
+  float: right;
+}
+
+
+.search-custom-position {
+  position: absolute;
+  color: #7575a1;
+  right: 170px;
+  top: 36px;
+}
+
+.active-item {
+  background-color: #155a85;
+}
+
+.more-info {
+  display: flex;
+  font-size: 25px;
+  justify-content: center;
+}
+
+.more-item {
+  color: rgb(134, 30, 204);
+  margin: 10px;
+}
+
+.date-picker {
+  padding: 10px;
+  float: right;
+  display: flex;
+  align-items: center;
+}
+
+.react-datepicker-wrapper input {
+  height: 21px;
+  margin-left: 10px;
+  border-radius: 5px;
+  padding: 3px 10px;
+}
+
+.react-datepicker-wrapper input:focus {
+  outline: -webkit-focus-ring-color auto 0px;
+}
+
+@media only screen and (max-width: 600px) {
+
+  .app-header {
+    width: 100%;
+    display: block;
+    background-color: #36617c;
+    padding: 0px 0px;
+    color: white;
+
+  }
+
+  .app-title {
+    width: 100%;
+  }
+
+  .title {
+    margin: 0 15px;
+  }
+  
+  .app-tab {
+    width: 100%;
+  }
+
+  .search-tab {
+    width: 100%;
+  }
+
+  .search-custom-position {
+    position: relative;
+    color: #a8a8d1;
+    right: 23px;
+    top: 2px;
+  }
+
+  .header-search-bar {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .date-picker {
+    display: flex;
+    justify-content: flex-end;
+    float: none;
+  }
+
+  .tab-group {
+    float: none;
   }
 }

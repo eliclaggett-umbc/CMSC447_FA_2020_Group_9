@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import Search from './components/Search';
 import { render } from 'react-dom';
 
+mapboxgl.accessToken ='pk.eyJ1IjoiaGl3aWhhcmFyIiwiYSI6ImNraDJ6b2k4MTB0eWQyeXJ4NDcycWpodmUifQ.bxEz-zu7gz8jhCQLybK5bw';
 
 async function calculateCountyColorsForDate(date, covidType) {
   let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
@@ -86,7 +87,7 @@ export default class App extends React.Component {
 
     const map = new mapboxgl.Map({
       container: this.state.mapContainer.current,
-      style: 'http://localhost:8080/styles/positron/style.json',
+      style: 'mapbox://styles/hiwiharar/cki4zzouj6lxe1aqrwwj4cl35',
       maxBounds: bounds
     });
     let endDate = this.state.endDate;
@@ -173,40 +174,54 @@ export default class App extends React.Component {
   }
 
   render() {
-
-  return (
-    <div className="container">
-      
-        <h1 className="title">
-          COVID-19 Prison Map
-        </h1>
-        <p>The web server is working.</p>
-        <div ref={this.state.mapContainer} className='mapContainer'></div>
-
-        <div className="container">
-          <p>
-            Toggle COVID-19 Data Type
-          </p>
-          <button onClick={() => {this.handleCovidTypeChange();}}>
-            {this.state.covidButtonText}
-          </button>
-          <p>
-            Date of Accumulated COVID-19 Information
-          </p>
-          <DatePicker
-            selected={this.state.endDate}
-            onChange={(date) => {this.handleDateChange(date);}}
-            selectsEnd
-            startDate={this.state.startDate}
-            endDate={this.state.endDate}
-            minDate={this.state.startDate}
-            maxDate={this.state.currDate}
-          />
+    return (
+      <div className="container">
+        <div className="app-header">
+          <div className="app-title">
+            <h1 className="title">COVID-19 Prison Map</h1>
+          </div>
+          <div className="app-tab">
+            <div className="date-picker">
+              <div>Date:</div>
+              <DatePicker
+                selected={this.state.endDate}
+                onChange={(date) => {
+                  this.handleDateChange(date);
+                }}
+                selectsEnd
+                startDate={this.state.startDate}
+                endDate={this.state.endDate}
+                minDate={this.state.startDate}
+                maxDate={this.state.currDate}
+              />
+            </div>
+            <Search className="header-search-bar" />
+            <div className="tab-group">
+              <div
+                className={`item-tab ${
+                  this.state.covidType === "sum_cases" ? "active-item" : ""
+                }`}
+                onClick={() => this.handleCovidTypeChange("sum_cases")}
+              >
+                Case
+              </div>
+              <div
+                className={`item-tab ${
+                  this.state.covidType === "sum_deaths" ? "active-item" : ""
+                }`}
+                onClick={() => this.handleCovidTypeChange("sum_deaths")}
+              >
+                Death
+              </div>
+            </div>
+          </div>
         </div>
-
-        <Search/>
-
-    </div>
-  )
-}
+        <div ref={this.state.mapContainer} className="mapContainer"></div>
+        <div className="more-info">
+          <div className="more-item">total death: 0</div>
+          <div className="more-item">total cases: 0</div>
+        </div>
+      </div>
+    );
+  }
 }

@@ -81,3 +81,13 @@
 
     border-bottom: 2px solid turquoise;
 }
+
+select {
+    background-color: #155a85 !important;
+    width: 80px !important;
+    height: 30px !important;
+    color: white !important;
+    border-radius: 5px;
+}
+
+
