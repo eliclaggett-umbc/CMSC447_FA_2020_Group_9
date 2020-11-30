@@ -248,20 +248,22 @@ module.exports = async function handler(req, res) {
 		})
 		//Count.ID, Facility, State, Name, Date, Website, Residents.Confirmed, Staff.Confirmed, Resident.Deaths, Staff.Deaths, Residents.Recovered, Staff.Recovered, Residents.Tested, Staff.Tested, Residents.Negative, Staff.Negative, Residents.Pending, Staff.Pending, Residents.Quarantine, Staff.Quarantine, Residents.Released, Resident.Population, Address, Zipcode, City, County, Latitude, Longitude, County.FIPS, hifld_id, Notes, 
 		for (const match of matches) {
-			query += `(\$${paramIndex},\$${paramIndex+1},\$${paramIndex+2},\$${paramIndex+3},\$${paramIndex+4},\$${paramIndex+5},\$${paramIndex+6},\$${paramIndex+7}),`;
-			paramIndex += 8;
+			if (match['id']) {
+				query += `(\$${paramIndex},\$${paramIndex+1},\$${paramIndex+2},\$${paramIndex+3},\$${paramIndex+4},\$${paramIndex+5},\$${paramIndex+6},\$${paramIndex+7}),`;
+				paramIndex += 8;
 
-			queryParams.push(
-				prison['id'],
-				match['Date'],
-				match['Residents.Tested'] && match['Residents.Tested'] != 'NA' ? match['Residents.Tested'] : 0,
-				match['Residents.Confirmed'] && match['Residents.Confirmed'] != 'NA' ? match['Residents.Confirmed'] : 0,
-				match['Resident.Deaths'] && match['Resident.Deaths'] != 'NA' ? match['Resident.Deaths'] : 0,
-				match['Staff.Tested'] && match['Staff.Tested'] != 'NA' ? match['Staff.Tested'] : 0,
-				match['Staff.Tested'] && match['Staff.Confirmed'] != 'NA' ? match['Staff.Confirmed'] : 0,
-				match['Staff.Tested'] && match['Staff.Deaths'] != 'NA' ? match['Staff.Deaths'] : 0
-			);
-			rowCount++;
+				queryParams.push(
+					prison['id'],
+					match['Date'],
+					match['Residents.Tested'] && match['Residents.Tested'].length > 0 && match['Residents.Tested'] != 'NA' ? match['Residents.Tested'] : 0,
+					match['Residents.Confirmed'] && match['Residents.Confirmed'].length > 0 && match['Residents.Confirmed'] != 'NA' ? match['Residents.Confirmed'] : 0,
+					match['Resident.Deaths'] && match['Resident.Deaths'].length > 0 && match['Resident.Deaths'] != 'NA' ? match['Resident.Deaths'] : 0,
+					match['Staff.Tested'] && match['Staff.Tested'].length > 0 && match['Staff.Tested'] != 'NA' ? match['Staff.Tested'] : 0,
+					match['Staff.Tested'] && match['Staff.Tested'].length > 0 && match['Staff.Confirmed'] != 'NA' ? match['Staff.Confirmed'] : 0,
+					match['Staff.Tested'] && match['Staff.Tested'].length > 0 && match['Staff.Deaths'] != 'NA' ? match['Staff.Deaths'] : 0
+				);
+				rowCount++;
+			}
 		}
 			
 		if (rowCount > 2500) {
