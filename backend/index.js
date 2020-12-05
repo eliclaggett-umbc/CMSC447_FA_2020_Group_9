@@ -41,6 +41,8 @@ app.listen(3000, () => {
 
 app.get("/api/prisons", prisons);
 app.get("/api/counties", counties);
+// added line
+app.get("/api/counties/fips/:fips", counties);
 app.use("/api/state/", stateRouter);
 app.get("/api/fetch_data", dataFetcher);
 app.get("/api/last_fetched", lastFetched);

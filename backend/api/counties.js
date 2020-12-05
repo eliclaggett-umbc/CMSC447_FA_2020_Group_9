@@ -15,7 +15,7 @@ module.exports = function handler(req, res) {
     // save route and query params.
     const { 
         query: {date, sum, avg},
-        params: {county, state}
+        params: {county, state, fips}
     } = req
 
     // use this to make queries
@@ -68,6 +68,12 @@ module.exports = function handler(req, res) {
             const whereClause = 'cc.dt < $' + paramIndex++;
             where = where.length ? where + ' AND ' + whereClause : 'WHERE ' + whereClause;
             query_params.push(request_params.date);
+        }
+
+        if (fips) {
+            const whereClause = 'c.fips = $' +  paramIndex++;
+            where = where.length ? where + ' AND ' + whereClause : 'WHERE ' + whereClause;
+            query_params.push(fips);
         }
 
         if (state) {
