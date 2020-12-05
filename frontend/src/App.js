@@ -7,9 +7,9 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
 import Search from './components/Search';
-import { render } from 'react-dom';
 
-mapboxgl.accessToken ='pk.eyJ1IjoiaGl3aWhhcmFyIiwiYSI6ImNraDJ6b2k4MTB0eWQyeXJ4NDcycWpodmUifQ.bxEz-zu7gz8jhCQLybK5bw';
+
+
 
 async function calculateCountyColorsForDate(date, covidType) {
   let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
@@ -27,7 +27,7 @@ async function calculateCountyColorsForDate(date, covidType) {
 
     try { // Prevent program from crashing if fetch doesn't return anything
       for (const row of result) {
-        values.push(parseInt(row[covidType]));
+        values.push(parseInt(row[covidType])); // populate values[] with covidType data
       }
     } catch(e) {
       console.log("Fetcher returned no data");
@@ -40,8 +40,9 @@ async function calculateCountyColorsForDate(date, covidType) {
       
       var color = colorScale(parseInt(row[covidType])).rgba();
       let colorString = 'rgba(' + color[0] + ', ' + color[1] + ', ' + color[2] + ', ' + color[3] + ')';
-      matchExpression.push(row['fips'].toString().padStart(5, '0'), colorString);
+      matchExpression.push(row['fips'].toString().padStart(5, '0'), colorString); 
     }
+    console.log(matchExpression);
     if (matchExpression.length == 2) {
       matchExpression.push(0, 'transparent');
     }
@@ -57,6 +58,31 @@ async function calculateCountyColorsForDate(date, covidType) {
   };
 }
 
+async function fetchCounty(GEOID, date) {
+
+  let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
+  let searchDate = year + "-" + month + "-" + day;
+
+  // add geoid in later
+  let toFetch = `http://localhost:8082/api/counties/fips/${GEOID}?sum=true&date=` + searchDate + '';
+
+  try {
+    let res = await fetch(toFetch);
+    let result = await res.json();
+    let ans = await console.log(result);
+    return result;
+   
+  }
+
+  catch(err) {
+    console.log('Error retrieving county COVID data for GEOID: ' + GEOID);
+    console.log(err);
+    return null;
+  };
+
+
+}
+
 export default class App extends React.Component {
   // Initialize state and props, bind functions
   constructor(props) {
@@ -68,7 +94,8 @@ export default class App extends React.Component {
     endDate: new Date(),
     covidType: 'sum_deaths',
     covidButtonText: "View COVID-19 Statistics by Cases",
-    aMap: undefined
+    aMap: undefined,
+    selectedCounty: undefined,
     };
 
     this.handleDateChange = this.handleDateChange.bind(this);
@@ -87,7 +114,7 @@ export default class App extends React.Component {
 
     const map = new mapboxgl.Map({
       container: this.state.mapContainer.current,
-      style: 'mapbox://styles/hiwiharar/cki4zzouj6lxe1aqrwwj4cl35',
+      style: 'http://localhost:8080/styles/positron/style.json',
       maxBounds: bounds
     });
     let endDate = this.state.endDate;
@@ -98,6 +125,8 @@ export default class App extends React.Component {
       map.setPaintProperty('omt_watermark', 'text-halo-color', 'rgba(0,0,0,0)');
       
       calculateCountyColorsForDate(endDate, covidType).then( (countyColors) => {
+
+        console.log(countyColors);
 
         if (map.getLayer("counties")) {map.removeLayer("counties");}
         if (map.getLayer("pointLayer")) {map.removeLayer("pointLayer");}
@@ -118,7 +147,7 @@ export default class App extends React.Component {
           }
         });
 
-
+        
         map.addSource('points', {
           type: "geojson",
           data: 'http://localhost:8082/geojson/prisons'
@@ -133,18 +162,73 @@ export default class App extends React.Component {
           }
         });
       });
+
     });
 
-    map.on("click", "counties", function(e) {
+
+
+    
+
+    map.on("click", "counties", (e) => {
+
+     
       // TODO: Remove this, just for debugging
       
       let coordinates = e.features[0].geometry.coordinates[0];
+      // vert 66.7 -> 50.6
+
+      // -115.6 -> -73.2
+      var LngLatBounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
 
       var bounds = coordinates.reduce(function (bounds, coord) {
         return bounds.extend(coord);
-        }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+        }, LngLatBounds);
 
         map.fitBounds(bounds, { padding: 20 });
+
+        // fetch county data, save to "selected location" in state
+        /*handleMapSelectionChange = () => {
+
+          let day = this.state.endDate.getDate(); let month = this.state.endDate.getMonth() + 1; let year = this.state.endDate.getFullYear();
+          let searchDate = year + "-" + month + "-" + day;
+
+          let toFetch = 'http://localhost:8082/api/counties?sum=true&date=' + searchDate + '';
+
+
+        }*/
+
+        // get geoid of selected county
+        var GEOID = e.features[0].properties['GEOID'];
+
+        fetchCounty(GEOID, this.state.endDate).then( (result) => {
+            
+          
+          this.setState({selectedCounty: result});
+
+        var county = result[0].name ? result[0].name : '';
+        var state = result[0].state ? result[0].state : '';
+        var cases = result[0].sum_cases ? result[0].sum_cases : '';
+        var deaths = result[0].sum_deaths ? result[0].sum_deaths : '';
+
+        var rows = [];
+        rows.push(county + (county ? ', ' : '') + state);
+        rows.push(cases ? `cases:  ${cases}` : '');
+        rows.push(cases ? `deaths: ${deaths}` : ''); 
+        
+          console.log(rows);
+
+          var popupHTML = '';
+          rows.forEach(e  => popupHTML += `<div>${e}<\div>`);
+
+          var popup = new mapboxgl.Popup({offset: [0, -700]})
+          .setLngLat(LngLatBounds.getCenter())
+          .setHTML(popupHTML)
+          .addTo(map);
+          
+          
+        });
+
+        
     });
 
     this.setState({aMap: map});
@@ -160,7 +244,8 @@ export default class App extends React.Component {
     
     this.setState({covidType: nextCovidType, covidButtonText: nextCovidButtonText});
 
-    calculateCountyColorsForDate(this.state.endDate, nextCovidType).then( (countyColors) => {
+    calculateCountyColorsForDate(this.state.endDate, this.state.covidType).then( (countyColors) => {
+      console.log(countyColors);
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
   }
@@ -169,59 +254,57 @@ export default class App extends React.Component {
     this.setState({endDate: date});
 
     calculateCountyColorsForDate(date, this.state.covidType).then( (countyColors) => {
+      console.log("hi");
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
   }
 
+
+
+
+
   render() {
-    return (
-      <div className="container">
-        <div className="app-header">
-          <div className="app-title">
-            <h1 className="title">COVID-19 Prison Map</h1>
-          </div>
-          <div className="app-tab">
-            <div className="date-picker">
-              <div>Date:</div>
-              <DatePicker
-                selected={this.state.endDate}
-                onChange={(date) => {
-                  this.handleDateChange(date);
-                }}
-                selectsEnd
-                startDate={this.state.startDate}
-                endDate={this.state.endDate}
-                minDate={this.state.startDate}
-                maxDate={this.state.currDate}
-              />
-            </div>
-            <Search className="header-search-bar" />
-            <div className="tab-group">
-              <div
-                className={`item-tab ${
-                  this.state.covidType === "sum_cases" ? "active-item" : ""
-                }`}
-                onClick={() => this.handleCovidTypeChange("sum_cases")}
-              >
-                Case
-              </div>
-              <div
-                className={`item-tab ${
-                  this.state.covidType === "sum_deaths" ? "active-item" : ""
-                }`}
-                onClick={() => this.handleCovidTypeChange("sum_deaths")}
-              >
-                Death
-              </div>
-            </div>
-          </div>
+
+  return (
+
+    <div className="container">
+
+      
+
+
+        <h1 className="title">
+          COVID-19 Prison Map
+        </h1>
+        <p>The web server is working.</p>
+
+
+      
+        <div ref={this.state.mapContainer} className='mapContainer'></div>
+
+        <div className="container">
+          <p>
+            Toggle COVID-19 Data Type
+          </p>
+          <button onClick={() => {this.handleCovidTypeChange();}}>
+            {this.state.covidButtonText}
+          </button>
+          <p>
+            Date of Accumulated COVID-19 Information
+          </p>
+          <DatePicker
+            selected={this.state.endDate}
+            onChange={(date) => {this.handleDateChange(date);}}
+            selectsEnd
+            startDate={this.state.startDate}
+            endDate={this.state.endDate}
+            minDate={this.state.startDate}
+            maxDate={this.state.currDate}
+          />
         </div>
-        <div ref={this.state.mapContainer} className="mapContainer"></div>
-        <div className="more-info">
-          <div className="more-item">total death: 0</div>
-          <div className="more-item">total cases: 0</div>
-        </div>
-      </div>
-    );
-  }
+
+        <Search/>
+
+    </div>
+  )
+}
 }
