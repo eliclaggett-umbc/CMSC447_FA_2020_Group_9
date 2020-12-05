@@ -19,6 +19,7 @@ export default class Search extends React.Component {
   };
 
   handleSearchQuery = (e) => {
+
     fetch(
       `http://localhost:8082/api/search/${this.state.searchBy}?search=${e.target.value}`
     )
@@ -46,6 +47,8 @@ export default class Search extends React.Component {
   };
 
   render() {
+    // maximum search results to display
+    let maxResults = 10;
     let elements =
       this.state.searchBy == "counties"
         ? this.state.countyElems
@@ -68,11 +71,11 @@ export default class Search extends React.Component {
         ></input>
         {/* <i className="fa fa-search search-custom-position" aria-hidden="true"></i> */}
 
-        {/* <div className={styles.resultList}>
-          {elements.map((elem, index) => (
+        { <div className={styles.resultList}>
+          {elements.slice(0,maxResults).map((elem, index) => (
             <ResultListElement key={index} data={elem} />
           ))}
-        </div> */}
+        </div> }
       </div>
     );
   }
