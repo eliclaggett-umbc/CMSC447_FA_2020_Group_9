@@ -191,6 +191,10 @@ export default class App extends React.Component {
 
       var rows = [];
 
+      if(!data.length) return;
+
+      console.log(data);
+
       if (type == 'counties') {
 
             var county = data[0].name ? data[0].name : '';
