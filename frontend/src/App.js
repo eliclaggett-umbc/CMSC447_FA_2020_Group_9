@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import chroma from 'chroma-js';
-import mapboxgl from 'mapbox-gl';
+import mapboxgl, { LngLat } from 'mapbox-gl';
 import React, { useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -58,24 +58,44 @@ async function calculateCountyColorsForDate(date, covidType) {
   };
 }
 
-async function fetchCounty(GEOID, date) {
+async function fetchCovidData(searchBy, queryParams, filters) {
 
-  let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
-  let searchDate = year + "-" + month + "-" + day;
+//'prisons', {'name': name}, {'date': date, 'sum': true})
 
+  if(filters['date']) {
+
+    let day = filters['date'] ? filters['date'].getDate() : ''; let month = filters['date'].getMonth() + 1; let year = filters['date'].getFullYear();
+    filters['date'] = year + "-" + month + "-" + day;
+  }
+
+  let routeHeader = 'http://localhost:8082';
+
+  let routeString = `/api/` + (searchBy ? `${searchBy}` : '') + '';
+
+  let queryString = '';
+  Object.keys(queryParams).forEach(key => {queryString += `/${key}/${queryParams[key]}`});
+
+  let filterString = filters ? '?' : '';
+  Object.keys(filters).forEach( key => {
+    filterString += filterString.length == 1 ? `${key}=${filters[key]}` : `&${key}=${filters[key]}`
+  });
+
+  let toFetch = routeHeader + routeString + queryString + filterString;
+
+  console.log(toFetch);
   // add geoid in later
-  let toFetch = `http://localhost:8082/api/counties/fips/${GEOID}?sum=true&date=` + searchDate + '';
+  //let toFetch = `http://localhost:8082/api/` + searchBy ? `${searchBy}/`  ${counties}/fips/${GEOID}?sum=true&date=` + searchDate + '';
 
   try {
     let res = await fetch(toFetch);
     let result = await res.json();
-    let ans = await console.log(result);
+    //console.log(result);
     return result;
    
   }
 
   catch(err) {
-    console.log('Error retrieving county COVID data for GEOID: ' + GEOID);
+    console.log(`Error retrieving ${searchBy} COVID data`);
     console.log(err);
     return null;
   };
@@ -96,6 +116,7 @@ export default class App extends React.Component {
     covidButtonText: "View COVID-19 Statistics by Cases",
     aMap: undefined,
     selectedCounty: undefined,
+    selectedPrison: undefined,
     };
 
     this.handleDateChange = this.handleDateChange.bind(this);
@@ -166,19 +187,88 @@ export default class App extends React.Component {
 
     });
 
+    function handlePopup(type, location, date, data) {
+
+      var rows = [];
+
+      if (type == 'counties') {
+
+            var county = data[0].name ? data[0].name : '';
+            var state = data[0].state ? data[0].state : '';
+            var cases = data[0].sum_cases ? data[0].sum_cases : '';
+            var deaths = data[0].sum_deaths ? data[0].sum_deaths : '';
+  
+           
+            rows.push(county + (county ? ', ' : '') + state);
+            rows.push(cases ? `cases:  ${cases}` : '');
+            rows.push(deaths ? `deaths: ${deaths}` : '');
+      }
+
+      if(type == 'prisons') {
+            var name = data[0].name ? data[0].name : '';
+            var county = data[0].state ? data[0].state : '';
+            var prisoner_cases = data[0].sum_prisoner_cases ? data[0].sum_prisoner_cases : '';
+            var staff_cases = data[0].sum_staff_cases ? data[0].sum_staff_cases : '';
+            var prisoner_deaths = data[0].sum_prisoner_deaths ? data[0].sum_prisoner_deaths : '';
+            var staff_deaths = data[0].sum_staff_deaths ? data[0].sum_staff_deaths : '';
+  
+           
+            rows.push(name + (name ? ', ' : '') + county);
+            rows.push(prisoner_cases ? `prisoner cases:  ${prisoner_cases}` : '');
+            rows.push(staff_cases ? `staff cases:  ${staff_cases}` : '');
+            rows.push(prisoner_deaths ? `prisoner deaths: ${prisoner_deaths}` : '');
+            rows.push(staff_deaths ? `staff deaths: ${staff_deaths}` : '');
+      }
+
+          // create rows for popup
+          console.log('loc', location);
+          generatePopup(rows, location);
+    }
+
+    // create a popup on the map.
+    function generatePopup(rows, location){
+
+      var popupHTML = '';
+
+      rows.forEach(elem  => popupHTML += `<div>${elem}<\div>`);
+
+      var popup = new mapboxgl.Popup({offset: [0, -700]})
+      .setLngLat(location)
+      .setHTML(popupHTML)
+      .addTo(map);
+    }
 
 
-    
+
+  
+    // perform prison click, fetch covid data, and display popup
+    async function handlePrisonClick(GEOID, features, LngLatBounds, date) {
+
+      
+      // get geoid of selected county
+      var name = features[0].properties['title'];
+
+      var values = [['prison', 'county'], 'cases', 'deaths'];
+
+      // (searchby, queryparams, routeparams)
+      var result = await fetchCovidData('prisons', {'fips': GEOID, 'name': name}, {'date': date, 'sum': true}).then( (result) => {
+        handlePopup('prisons', LngLatBounds.getCenter(), date, result);
+      })
+
+      return result;
+    }
+
+
 
     map.on("click", "counties", (e) => {
-
      
       // TODO: Remove this, just for debugging
       
       let coordinates = e.features[0].geometry.coordinates[0];
-      // vert 66.7 -> 50.6
 
-      // -115.6 -> -73.2
+      // get geoid of selected county
+      var GEOID = e.features[0].properties['GEOID'];
+
       var LngLatBounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
 
       var bounds = coordinates.reduce(function (bounds, coord) {
@@ -187,47 +277,38 @@ export default class App extends React.Component {
 
         map.fitBounds(bounds, { padding: 20 });
 
-        // fetch county data, save to "selected location" in state
-        /*handleMapSelectionChange = () => {
 
-          let day = this.state.endDate.getDate(); let month = this.state.endDate.getMonth() + 1; let year = this.state.endDate.getFullYear();
-          let searchDate = year + "-" + month + "-" + day;
+      // if clicking on prison, display prison, not county data
+      var features = map.queryRenderedFeatures(e.point, { layers: ['pointLayer'] });
+      if (features.length) {
+        
+          handlePrisonClick(GEOID, features, LngLatBounds, this.state.endDate, {'sum': true}).then((result) => {
 
-          let toFetch = 'http://localhost:8082/api/counties?sum=true&date=' + searchDate + '';
+            this.setState({selectedPrison: result});
+            
+          });
 
 
-        }*/
+          
+          // display county data
+      } else {
 
-        // get geoid of selected county
-        var GEOID = e.features[0].properties['GEOID'];
-
-        fetchCounty(GEOID, this.state.endDate).then( (result) => {
+        var values = [['county', 'state'], 'cases', 'deaths'];
+  
+        // (searchby, queryparams, routeparams)
+        fetchCovidData('counties', {'fips': GEOID}, {'date': this.state.endDate, 'sum': true}).then( (result) => {
             
           
           this.setState({selectedCounty: result});
-
-        var county = result[0].name ? result[0].name : '';
-        var state = result[0].state ? result[0].state : '';
-        var cases = result[0].sum_cases ? result[0].sum_cases : '';
-        var deaths = result[0].sum_deaths ? result[0].sum_deaths : '';
-
-        var rows = [];
-        rows.push(county + (county ? ', ' : '') + state);
-        rows.push(cases ? `cases:  ${cases}` : '');
-        rows.push(cases ? `deaths: ${deaths}` : ''); 
-        
-          console.log(rows);
-
-          var popupHTML = '';
-          rows.forEach(e  => popupHTML += `<div>${e}<\div>`);
-
-          var popup = new mapboxgl.Popup({offset: [0, -700]})
-          .setLngLat(LngLatBounds.getCenter())
-          .setHTML(popupHTML)
-          .addTo(map);
+  
+          handlePopup(e, 'counties', LngLatBounds.getCenter(), this.state.endDate, result);
           
           
         });
+      }
+
+       // console.log(e.features);
+
 
         
     });
@@ -246,7 +327,7 @@ export default class App extends React.Component {
     this.setState({covidType: nextCovidType, covidButtonText: nextCovidButtonText});
 
     calculateCountyColorsForDate(this.state.endDate, this.state.covidType).then( (countyColors) => {
-      console.log(countyColors);
+
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
   }
@@ -255,7 +336,7 @@ export default class App extends React.Component {
     this.setState({endDate: date});
 
     calculateCountyColorsForDate(date, this.state.covidType).then( (countyColors) => {
-      console.log("hi");
+
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
   }
