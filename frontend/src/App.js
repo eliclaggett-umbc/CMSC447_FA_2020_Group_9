@@ -297,6 +297,8 @@ export default class App extends React.Component {
           // display county data
       } else {
 
+        console.log("countiessss");
+
         var values = [['county', 'state'], 'cases', 'deaths'];
   
         // (searchby, queryparams, routeparams)
@@ -305,7 +307,7 @@ export default class App extends React.Component {
           
           this.setState({selectedCounty: result});
   
-          handlePopup(e, 'counties', LngLatBounds.getCenter(), this.state.endDate, result);
+          handlePopup('counties', LngLatBounds.getCenter(), this.state.endDate, result);
           
           
         });

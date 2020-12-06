@@ -14,9 +14,12 @@
 }
 
 .mapboxgl-popup {
+  width: 500px;
+  font-size: .9rem;
   background-color: #282c34;
   padding: 0.7rem;
   border-radius: .5rem;
+  opacity: 0.8;
 }
 
 .mapboxgl-popup div{
@@ -28,7 +31,6 @@
   border: none;
   text-decoration: none;
   background-color: transparent;
-  size: 300%;
 }
 
 .mapboxgl-popup-close-button:active {
