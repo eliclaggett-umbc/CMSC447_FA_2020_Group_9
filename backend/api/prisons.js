@@ -11,7 +11,7 @@ module.exports = function handler(req, res) {
     // save route and query params.
     const { 
         query: {date, sum, avg},
-        params: {county, state}
+        params: {fips, name}
     } = req
 
     var request_params = {
@@ -68,16 +68,16 @@ module.exports = function handler(req, res) {
             query_params.push(request_params.date);
         }
 
-        if (state) {
-            const whereClause = 'c.state = $' +  paramIndex++;
+        if (fips) {
+            const whereClause = 'p.fips =$' +  paramIndex++;
             where = where.length ? where + ' AND ' + whereClause : 'WHERE ' + whereClause;
-            query_params.push(state);
+            query_params.push(fips);
         }
 
-        if (county) {
-            const whereClause = 'c.name LIKE $' +  paramIndex++;
+        if (name) {
+            const whereClause = `p.name=$` +  paramIndex++;
             where = where.length ? where + ' AND ' + whereClause : 'WHERE ' + whereClause;
-            query_params.push(county);
+            query_params.push(name);
         }
 
         if (aggregate_cols.length) {
@@ -86,7 +86,6 @@ module.exports = function handler(req, res) {
 
         query_string = `SELECT c.state, c.name, c.fips, p.name, p.id, p.population, p.latitude, p.longitude ${aggregate_cols} FROM prison p JOIN county c ON p.fips=c.fips ${join} ${where} ${group};`;
 
-    
         pool.query(query_string, query_params)
         .then((result) => {
             res.send(result.rows);

@@ -43,12 +43,12 @@ app.get("/api/prisons", prisons);
 app.get("/api/counties", counties);
 // added line
 app.get("/api/counties/fips/:fips", counties);
+app.get("/api/prisons/fips/:fips/name/:name", prisons);
+app.get("/api/prisons/fips/:fips", prisons);
 app.use("/api/state/", stateRouter);
 app.get("/api/fetch_data", dataFetcher);
 app.get("/api/last_fetched", lastFetched);
 app.get("/api/search/counties", searchCounties);
 app.get("/api/search/prisons", searchPrisons);
-
-
 
 app.get("/geojson/prisons", geoJSONPrisons);
