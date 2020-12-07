@@ -5,7 +5,6 @@ import mapboxgl, { LngLat } from 'mapbox-gl';
 import React, { useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-
 import Search from './components/Search';
 
 mapboxgl.accessToken ='pk.eyJ1IjoiaGl3aWhhcmFyIiwiYSI6ImNraDJ6b2k4MTB0eWQyeXJ4NDcycWpodmUifQ.bxEz-zu7gz8jhCQLybK5bw';
@@ -30,7 +29,6 @@ async function calculateCountyColorsForDate(date, covidType) {
         values.push(parseInt(row[covidType])); // populate values[] with covidType data
       }
     } catch(e) {
-      console.log("Fetcher returned no data");
       return;
     }
 
@@ -42,7 +40,6 @@ async function calculateCountyColorsForDate(date, covidType) {
       let colorString = 'rgba(' + color[0] + ', ' + color[1] + ', ' + color[2] + ', ' + color[3] + ')';
       matchExpression.push(row['fips'].toString().padStart(5, '0'), colorString); 
     }
-    console.log(matchExpression);
     if (matchExpression.length == 2) {
       matchExpression.push(0, 'transparent');
     }
@@ -81,10 +78,6 @@ async function fetchCovidData(searchBy, queryParams, filters) {
   });
 
   let toFetch = routeHeader + routeString + queryString + filterString;
-
-  console.log(toFetch);
-  // add geoid in later
-  //let toFetch = `http://localhost:8082/api/` + searchBy ? `${searchBy}/`  ${counties}/fips/${GEOID}?sum=true&date=` + searchDate + '';
 
   try {
     let res = await fetch(toFetch);
@@ -141,14 +134,13 @@ export default class App extends React.Component {
 
     let endDate = this.state.endDate;
     let covidType = this.state.covidType;
+
     map.on("load", function() {
       // Hide watermark from the free version of OpenMapTiles
       map.setPaintProperty('omt_watermark', 'text-color', 'rgba(0,0,0,0)');
       map.setPaintProperty('omt_watermark', 'text-halo-color', 'rgba(0,0,0,0)');
       
       calculateCountyColorsForDate(endDate, covidType).then( (countyColors) => {
-
-        console.log(countyColors);
 
         if (map.getLayer("counties")) {map.removeLayer("counties");}
         if (map.getLayer("pointLayer")) {map.removeLayer("pointLayer");}
@@ -168,7 +160,20 @@ export default class App extends React.Component {
             "fill-color": countyColors
           }
         });
-
+        map.addLayer(
+          {
+          'id': 'counties-highlighted',
+          'type': 'line',
+          'source': 'counties',
+          'source-layer': 'County',
+          
+          'paint': {
+            'line-color': '#fff',
+            'line-width': 4,
+          },
+          'filter': ['==', 'GEOID', '']
+          }
+        ); 
         
         map.addSource('points', {
           type: "geojson",
@@ -193,39 +198,36 @@ export default class App extends React.Component {
 
       if(!data.length) return;
 
-      console.log(data);
-
       if (type == 'counties') {
 
             var county = data[0].name ? data[0].name : '';
             var state = data[0].state ? data[0].state : '';
-            var cases = data[0].sum_cases ? data[0].sum_cases : '';
-            var deaths = data[0].sum_deaths ? data[0].sum_deaths : '';
+            var cases = data[0].sum_cases ? data[0].sum_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+            var deaths = data[0].sum_deaths ? data[0].sum_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
   
            
             rows.push(county + (county ? ', ' : '') + state);
-            rows.push(cases ? `cases:  ${cases}` : '');
-            rows.push(deaths ? `deaths: ${deaths}` : '');
+            rows.push(cases ? `Cases:  ${cases}` : '');
+            rows.push(deaths ? `Deaths: ${deaths}` : '');
       }
 
       if(type == 'prisons') {
             var name = data[0].name ? data[0].name : '';
             var county = data[0].state ? data[0].state : '';
-            var prisoner_cases = data[0].sum_prisoner_cases ? data[0].sum_prisoner_cases : '';
-            var staff_cases = data[0].sum_staff_cases ? data[0].sum_staff_cases : '';
-            var prisoner_deaths = data[0].sum_prisoner_deaths ? data[0].sum_prisoner_deaths : '';
-            var staff_deaths = data[0].sum_staff_deaths ? data[0].sum_staff_deaths : '';
+            var prisoner_cases = data[0].sum_prisoner_cases ? data[0].sum_prisoner_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+            var staff_cases = data[0].sum_staff_cases ? data[0].sum_staff_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+            var prisoner_deaths = data[0].sum_prisoner_deaths ? data[0].sum_prisoner_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+            var staff_deaths = data[0].sum_staff_deaths ? data[0].sum_staff_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
   
            
             rows.push(name + (name ? ', ' : '') + county);
-            rows.push(prisoner_cases ? `prisoner cases:  ${prisoner_cases}` : '');
-            rows.push(staff_cases ? `staff cases:  ${staff_cases}` : '');
-            rows.push(prisoner_deaths ? `prisoner deaths: ${prisoner_deaths}` : '');
-            rows.push(staff_deaths ? `staff deaths: ${staff_deaths}` : '');
+            rows.push(prisoner_cases ? `Prisoner Cases:  ${prisoner_cases}` : '');
+            rows.push(staff_cases ? `Staff Cases:  ${staff_cases}` : '');
+            rows.push(prisoner_deaths ? `Prisoner Deaths: ${prisoner_deaths}` : '');
+            rows.push(staff_deaths ? `Staff Deaths: ${staff_deaths}` : '');
       }
 
           // create rows for popup
-          console.log('loc', location);
           generatePopup(rows, location);
     }
 
@@ -234,7 +236,12 @@ export default class App extends React.Component {
 
       var popupHTML = '';
 
-      rows.forEach(elem  => popupHTML += `<div>${elem}<\div>`);
+      popupHTML += '<h3>' + rows[0] + '</h3><div>';
+      for( let i = 1; i < rows.length; i++ ) {
+        popupHTML += `<span>${rows[i]}</span>`;
+      }
+      popupHTML += '</div>';
+      console.log(popupHTML);
 
       var popup = new mapboxgl.Popup({offset: [0, -700]})
       .setLngLat(location)
@@ -264,23 +271,18 @@ export default class App extends React.Component {
 
 
 
-    map.on("click", "counties", (e) => {
+    map.on("click", "counties", async (e) => {
      
-      // TODO: Remove this, just for debugging
-      
-      let coordinates = e.features[0].geometry.coordinates[0];
-
-      // get geoid of selected county
       var GEOID = e.features[0].properties['GEOID'];
+      
+      try {
 
-      var LngLatBounds = new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]);
-
-      var bounds = coordinates.reduce(function (bounds, coord) {
-        return bounds.extend(coord);
-        }, LngLatBounds);
-
-        map.fitBounds(bounds, { padding: 20 });
-
+      
+      let res = await fetch('http://localhost:8082/geojson/counties?fips=' + GEOID);
+      let result = await res.json();
+      let LngLatBounds = new mapboxgl.LngLatBounds(result[0], result[1]);
+      map.setFilter('counties-highlighted', ['==', 'GEOID', GEOID]);
+      map.fitBounds(result, { padding: 150 });
 
       // if clicking on prison, display prison, not county data
       var features = map.queryRenderedFeatures(e.point, { layers: ['pointLayer'] });
@@ -297,8 +299,6 @@ export default class App extends React.Component {
           // display county data
       } else {
 
-        console.log("countiessss");
-
         var values = [['county', 'state'], 'cases', 'deaths'];
   
         // (searchby, queryparams, routeparams)
@@ -312,11 +312,10 @@ export default class App extends React.Component {
           
         });
       }
-
-       // console.log(e.features);
-
-
-        
+    }
+     catch(e) {
+       console.log(e);
+     }   
     });
 
     this.setState({aMap: map});

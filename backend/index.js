@@ -5,6 +5,7 @@ const searchPrisons = require('./api/search/prisons.js');
 const dataFetcher = require('./api/data_fetcher/fetch.js');
 const lastFetched = require('./api/data_fetcher/last_fetched.js');
 const geoJSONPrisons = require('./geojson/prisons.js');
+const geoJSONCounties = require('./geojson/counties.js');
 const stateRouter = require('./stateRouter.js');
 const pool = require('./api/db');
 
@@ -52,3 +53,4 @@ app.get("/api/search/counties", searchCounties);
 app.get("/api/search/prisons", searchPrisons);
 
 app.get("/geojson/prisons", geoJSONPrisons);
+app.get("/geojson/counties", geoJSONCounties);
