@@ -131,7 +131,7 @@ export default class App extends React.Component {
       style: 'mapbox://styles/hiwiharar/cki4zzouj6lxe1aqrwwj4cl35',
       maxBounds: bounds
     });
-
+    map.scrollZoom.disable();
     let endDate = this.state.endDate;
     let covidType = this.state.covidType;
 
