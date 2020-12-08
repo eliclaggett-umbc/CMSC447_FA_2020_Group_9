@@ -12,6 +12,53 @@ import Loader from 'react-loader-spinner';
 mapboxgl.accessToken ='pk.eyJ1IjoiaGl3aWhhcmFyIiwiYSI6ImNraDJ6b2k4MTB0eWQyeXJ4NDcycWpodmUifQ.bxEz-zu7gz8jhCQLybK5bw';
 
 
+async function calculatePrisonSizesForDate(date, covidType) {
+  let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
+  let searchDate = year + "-" + month + "-" + day;
+  if ( covidType == 'sum_cases' ) {
+    covidType = 'sum_prisoner_cases';
+  } else {
+    covidType = 'sum_prisoner_deaths';
+  }
+  let matchExpression = ['match', ['get', 'id']];
+
+  let toFetch = 'http://localhost:8082/api/prisons?sum=true&date=' + searchDate + '';
+  
+  try {
+    let res = await fetch(toFetch);
+    let result = await res.json();
+    let values = [];
+
+    try { // Prevent program from crashing if fetch doesn't return anything
+      for (const row of result) {
+        values.push(parseInt(row[covidType])); // populate values[] with covidType data
+      }
+    } catch(e) {
+      return;
+    }
+
+    let colorScale = chroma.scale(['#000', '#FFF']).domain(chroma.limits(values, 'q', 5));
+
+    for (const row of result) {
+      
+      var color = colorScale(parseInt(row[covidType])).luminance() * 20 + 5;
+      matchExpression.push(row['id'], color); 
+    }
+    // if (matchExpression.length == 2) {
+      matchExpression.push(5);
+    // }
+    console.log(matchExpression);
+    return matchExpression;
+  }
+  catch(err) {
+    console.log('Error getting retrieving county COVID data for date: ' + date);
+    console.log(err);
+    matchExpression.push(0, 'transparent');
+    matchExpression.push('transparent');
+    return matchExpression;
+  };
+}
+
 async function calculateCountyColorsForDate(date, covidType) {
   let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
   let searchDate = year + "-" + month + "-" + day;
@@ -34,7 +81,7 @@ async function calculateCountyColorsForDate(date, covidType) {
       return;
     }
 
-    let colorScale = chroma.scale(['rgba(255,255,255,0)', 'rgba(255,255,0,0.1)', 'rgba(255,195,0,0.3)', 'rgba(199,0,57,0.7)', 'rgba(144,12,63,0.9)']).domain(chroma.limits(values, 'q', 5));
+    let colorScale = chroma.scale(['rgba(255,255,255,0)', 'rgba(255,255,0,0.1)', 'rgba(255,201,3, 0.5)', 'rgba(220,83,0, 0.9)']).domain(chroma.limits(values, 'q', 5));
 
     for (const row of result) {
       
@@ -84,7 +131,6 @@ async function fetchCovidData(searchBy, queryParams, filters) {
   try {
     let res = await fetch(toFetch);
     let result = await res.json();
-    //console.log(result);
     return result;
    
   }
@@ -99,7 +145,7 @@ async function fetchCovidData(searchBy, queryParams, filters) {
 };
 // create a popup on the map.
 function generatePopup(rows, location, map) {
-  map.fire('closeAllPopups');
+  // map.fire('closeAllPopups');
   var popupHTML = '';
 
   popupHTML += '<h3>' + rows[0] + '</h3><div>';
@@ -167,7 +213,7 @@ export default class App extends React.Component {
     startDate: new Date("2020/01/01"),
     currDate: new Date(),
     endDate: new Date(),
-    covidType: 'sum_deaths',
+    covidType: 'sum_cases',
     covidButtonText: "View COVID-19 Statistics by Cases",
     aMap: undefined,
     selectedCounty: undefined,
@@ -193,7 +239,7 @@ export default class App extends React.Component {
       style: 'mapbox://styles/hiwiharar/cki4zzouj6lxe1aqrwwj4cl35',
       maxBounds: bounds
     });
-    map.scrollZoom.disable();
+    // map.scrollZoom.disable();
     let endDate = this.state.endDate;
     let covidType = this.state.covidType;
 
@@ -206,8 +252,8 @@ export default class App extends React.Component {
       
       calculateCountyColorsForDate(endDate, covidType).then( (countyColors) => {
 
-        if (map.getLayer("counties")) {map.removeLayer("counties");}
-        if (map.getLayer("pointLayer")) {map.removeLayer("pointLayer");}
+        // if (map.getLayer("counties")) {map.removeLayer("counties");}
+        // if (map.getLayer("pointLayer")) {map.removeLayer("pointLayer");}
 
         map.addLayer({
           id: "counties",
@@ -246,40 +292,46 @@ export default class App extends React.Component {
           clusterMaxZoom: 14, 
           clusterRadius: 5 
         });
-        map.addLayer({
-          'id': 'clusters',
-          'type': 'circle',
-          'source': 'points',
-          'paint': {
-            'circle-color': 'hsla(359, 89%, 7%, 0.72)',
-            'circle-radius': [
-              "interpolate",
-              ["linear"],
-              [
-                "get", 
-                'point_count'
-              ],
-              0,
-              10,
-              50,
-              70
-              ]
-                          
-            
-          }
+
+        calculatePrisonSizesForDate(endDate, covidType).then( (prisonSizes) => {
+          map.addLayer({
+            'id': 'pointLayer',
+            'type': 'circle',
+            'source': 'points',
+            'paint': {
+              'circle-color': 'rgba(230,71,0, 0.9)',
+              'circle-radius': prisonSizes
+            }
+          });
         });
+        
+        // map.addLayer({
+        //   'id': 'clusters',
+        //   'type': 'circle',
+        //   'source': 'points',
+        //   'paint': {
+        //     'circle-color': 'hsla(359, 89%, 7%, 0.72)',
+        //     'circle-radius': [
+        //       "interpolate",
+        //       ["linear"],
+        //       [
+        //         "get", 
+        //         'point_count'
+        //       ],
+        //       0,
+        //       10,
+        //       50,
+        //       70
+        //       ]        
+        //   }
+        // });
       });
 
     });
-
-    
-
-
-
   
     // perform prison click, fetch covid data, and display popup
     async function handlePrisonClick(GEOID, features, LngLatBounds, date) {
-
+      map.fire('closeAllPopups');
       
       // get geoid of selected county
       var name = features[0].properties['title'];
@@ -288,7 +340,7 @@ export default class App extends React.Component {
 
       // (searchby, queryparams, routeparams)
       var result = await fetchCovidData('prisons', {'fips': GEOID, 'name': name}, {'date': date, 'sum': true}).then( (result) => {
-        handlePopup('prisons', LngLatBounds, date, result, map);
+        handlePopup('prisons', features[0].geometry.coordinates, date, result, map);
       })
 
       return result;
@@ -303,10 +355,11 @@ export default class App extends React.Component {
       try {
 
       
-      let res = await fetch('http://localhost:8082/geojson/counties?fips=' + GEOID);
+      let res = await fetch('http://localhost:8082/geojson/counties?fips=' + GEOID.toString().padStart(5, '0'));
       let result = await res.json();
       let LngLatBounds = new mapboxgl.LngLatBounds(result[0], result[1]);
-      map.setFilter('counties-highlighted', ['==', 'GEOID', GEOID]);
+      map.fire('closeAllPopups');
+      map.setFilter('counties-highlighted', ['==', 'GEOID', GEOID.toString().padStart(5, '0')]);
       map.fitBounds(result, { padding: 150 });
 
       // if clicking on prison, display prison, not county data
@@ -383,6 +436,10 @@ export default class App extends React.Component {
 
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
+
+    calculatePrisonSizesForDate(this.state.endDate, nextCovidType).then( (prisonSizes) => {
+      this.state.aMap.setPaintProperty('pointLayer', 'circle-radius', prisonSizes);
+    });
   }
 
   handleDateChange = (date) => {
@@ -392,10 +449,15 @@ export default class App extends React.Component {
 
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
+
+    calculatePrisonSizesForDate(date, this.state.covidType).then( (prisonSizes) => {
+      this.state.aMap.setPaintProperty('pointLayer', 'circle-radius', prisonSizes);
+    });
   }
 
 
   handleSearch = async (type, id) => {
+    this.state.aMap.fire('closeAllPopups');
     if (type == 'prison') {
       let result = await fetch('http://localhost:8082/geojson/prisons?id=' + id);
       result = await result.json();
@@ -404,9 +466,9 @@ export default class App extends React.Component {
       result = await fetchCovidData('prisons', {}, {'date': this.state.endDate, 'sum': 'true', 'id': id});
       handlePopup('prisons', coords, this.state.endDate, result, this.state.aMap);
     } else {
-      let result = await fetch('http://localhost:8082/geojson/counties?fips=' + id);
+      let result = await fetch('http://localhost:8082/geojson/counties?fips=' + id.toString().padStart(5, '0'));
       let location = await result.json();
-      this.state.aMap.setFilter('counties-highlighted', ['==', 'GEOID', `${id}`]);
+      this.state.aMap.setFilter('counties-highlighted', ['==', 'GEOID', id.toString().padStart(5, '0')]);
       this.state.aMap.fitBounds(location, { padding: 150 });
       
       result = await fetchCovidData('counties', {'fips': id}, {'date': this.state.endDate, 'sum': 'true'});

@@ -165,6 +165,7 @@ body {
   align-items: center;
   opacity: 0.5;
   cursor: pointer;
+  justify-content: center;
 }
 .item-tab:hover {
   background-color: #1c5070;
@@ -218,6 +219,7 @@ body {
 .date-picker span {
   margin-right: 1em;
   font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .react-datepicker-wrapper input {
