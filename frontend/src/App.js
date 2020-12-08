@@ -47,7 +47,6 @@ async function calculatePrisonSizesForDate(date, covidType) {
     // if (matchExpression.length == 2) {
       matchExpression.push(5);
     // }
-    console.log(matchExpression);
     return matchExpression;
   }
   catch(err) {
@@ -153,7 +152,6 @@ function generatePopup(rows, location, map) {
     popupHTML += `<span>${rows[i]}</span>`;
   }
   popupHTML += '</div>';
-  // console.log(location)
 
   var popup = new mapboxgl.Popup()
   .setLngLat(location)
@@ -389,7 +387,6 @@ export default class App extends React.Component {
       }
     }
      catch(e) {
-       console.log(e);
      }   
     });
 
@@ -399,7 +396,6 @@ export default class App extends React.Component {
   componentDidMount() {
 
     fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
-      console.log('got here successgulley');
       if (result.all_cases) {
         this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ","), fetchingClass: 'fetchingIndicator hidden', containerClass: 'container visible' });
         this.finishLoading();
@@ -478,7 +474,13 @@ export default class App extends React.Component {
 
   handleDateChange = (date) => {
     this.setState({endDate: date});
-
+    let day = date.getDate(); let month = date.getMonth() + 1; let year = date.getFullYear();
+    let searchDate = year + "-" + month + "-" + day;
+    fetch('http://localhost:8082/api/total?date=' + searchDate).then((result) => result.json()).then((result) => {
+      if (result.all_cases) {
+        this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") });
+      }
+    });
     calculateCountyColorsForDate(date, this.state.covidType).then( (countyColors) => {
 
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
