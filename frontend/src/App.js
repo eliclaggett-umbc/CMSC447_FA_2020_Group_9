@@ -399,7 +399,7 @@ export default class App extends React.Component {
   componentDidMount() {
 
     fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
-
+      console.log('got here successgulley');
       if (result.all_cases) {
         this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ","), fetchingClass: 'fetchingIndicator hidden', containerClass: 'container visible' });
         this.finishLoading();
@@ -421,6 +421,40 @@ export default class App extends React.Component {
           });
         }, 2000);
       }
+    })
+    .catch((e) => {
+      this.setState({fetchingClass: 'fetchingIndicator'});
+      let checkDoneLoading = setInterval(() => {
+        fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
+          clearInterval(checkDoneLoading);  
+          
+          if (result.all_cases && this.state.fetchingClass == 'fetchingIndicator') {
+            this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ","), fetchingClass: 'fetchingIndicator hidden', containerClass: 'container visible' });
+            this.finishLoading();
+          } else if ( !result.all_cases && this.state.fetchingClass == 'fetchingIndicator') {
+
+            let checkDoneLoading2 = setInterval(() => {
+              fetch('http://localhost:8082/api/is_fetching').then((result) => result.json()).then((result) => {
+                if (result.is_fetching == false && this.state.fetchingClass == 'fetchingIndicator') {
+                  clearInterval(checkDoneLoading2);
+                  fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
+                    this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ","), fetchingClass: 'fetchingIndicator hidden', containerClass: 'container visible' });
+                  this.finishLoading();
+                  });
+                } else if (result.is_fetching == false){
+                  clearInterval(checkDoneLoading2);
+                } else {
+    
+                }
+              });
+            }, 2000);
+
+          }
+        })
+        .catch((e) => {
+
+        });
+      }, 2000);
     });
     
   }

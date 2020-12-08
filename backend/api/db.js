@@ -2,8 +2,6 @@
 
 const Pool = require('pg').Pool;
 
-const pool = new Pool();
-
-pool.query('UPDATE data_fetcher SET is_fetching=false');
+pool = new Pool();
 
 module.exports = pool;
