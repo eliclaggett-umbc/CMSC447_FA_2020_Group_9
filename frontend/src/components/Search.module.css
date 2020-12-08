@@ -1,23 +1,5 @@
 
 
-.fontSize2 {
-    font-family: Roboto, Arial;
-    font-size: 1.1rem;
-}
-
-.searchComponent {
-    
-    margin: 3rem 5rem;
-    width: 60%;
-}
-
-.searchByButtons {
-    display: flex;
-    justify-content: space-between;
-    width: 40%;
-    max-width: 200px;
-    padding: 1em 0em 2em 0em;
-}
 
 .button {
     background-color: transparent;
@@ -26,33 +8,6 @@
     text-decoration: none;
     cursor: pointer;
     padding: 0.5em 0.3em;
-    outline: 0;
-}
-
-.searchByButton + .searchByButton {
-    margin-left: 2em;
-}
-
-.searchByButton {
-
-    border-bottom: 2px solid transparent;
-  color: black;
-
-}
-
-.searchByButton:hover {
-    border-bottom: 2px solid turquoise;
-}
-
-.searchByButton:active{
-    border-bottom: 2px solid turquoise;
-}
-
-.searchBox {
-    text-decoration: none;
-    border-style: none;
-    background-color: transparent;
-    border-bottom: 2px solid turquoise;
     outline: 0;
 }
 
@@ -123,12 +78,7 @@ input:focus + .resultList, .resultList:hover {
 }
 
 .resultListElement:hover:after{
-    background: turquoise;
-}
-
-.buttonActive {
-
-    border-bottom: 2px solid turquoise;
+    background: #155a85;
 }
 
 select {
