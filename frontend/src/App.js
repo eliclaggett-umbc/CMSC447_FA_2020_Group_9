@@ -99,7 +99,7 @@ async function fetchCovidData(searchBy, queryParams, filters) {
 };
 // create a popup on the map.
 function generatePopup(rows, location, map) {
-
+  map.fire('closeAllPopups');
   var popupHTML = '';
 
   popupHTML += '<h3>' + rows[0] + '</h3><div>';
@@ -116,6 +116,10 @@ function generatePopup(rows, location, map) {
   popup.on('close', function(e) {
     map.setFilter('counties-highlighted', ['==', 'GEOID', '']);
   });
+
+  map.on('closeAllPopups', () => {
+    popup.remove();
+  })
 };
 function handlePopup(type, location, date, data, map) {
 
@@ -127,8 +131,8 @@ function handlePopup(type, location, date, data, map) {
 
         var county = data[0].name ? data[0].name : '';
         var state = data[0].state ? data[0].state : '';
-        var cases = data[0].sum_cases ? data[0].sum_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-        var deaths = data[0].sum_deaths ? data[0].sum_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+        var cases = data[0].sum_cases !== null ? data[0].sum_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'No Data';
+        var deaths = data[0].sum_deaths !== null ? data[0].sum_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'No Data';
        
         rows.push(county + (county ? ', ' : '') + state);
         rows.push(cases ? `Cases:  ${cases}` : '');
@@ -138,10 +142,10 @@ function handlePopup(type, location, date, data, map) {
   if(type == 'prisons') {
         var name = data[0].name ? data[0].name : '';
         var county = data[0].state ? data[0].state : '';
-        var prisoner_cases = data[0].sum_prisoner_cases ? data[0].sum_prisoner_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-        var staff_cases = data[0].sum_staff_cases ? data[0].sum_staff_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-        var prisoner_deaths = data[0].sum_prisoner_deaths ? data[0].sum_prisoner_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-        var staff_deaths = data[0].sum_staff_deaths ? data[0].sum_staff_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+        var prisoner_cases = data[0].sum_prisoner_cases !== null ? data[0].sum_prisoner_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'No Data';
+        var staff_cases = data[0].sum_staff_cases !== null ? data[0].sum_staff_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'No Data';
+        var prisoner_deaths = data[0].sum_prisoner_deaths !== null ? data[0].sum_prisoner_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'No Data';
+        var staff_deaths = data[0].sum_staff_deaths !== null ? data[0].sum_staff_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : 'No Data';
 
        
         rows.push(name + (name ? ', ' : '') + county);
@@ -375,7 +379,7 @@ export default class App extends React.Component {
     
     this.setState({covidType: nextCovidType, covidButtonText: nextCovidButtonText});
 
-    calculateCountyColorsForDate(this.state.endDate, this.state.covidType).then( (countyColors) => {
+    calculateCountyColorsForDate(this.state.endDate, nextCovidType).then( (countyColors) => {
 
       this.state.aMap.setPaintProperty('counties', 'fill-color', countyColors);
     });
@@ -395,7 +399,10 @@ export default class App extends React.Component {
     if (type == 'prison') {
       let result = await fetch('http://localhost:8082/geojson/prisons?id=' + id);
       result = await result.json();
-      this.state.aMap.flyTo({ center: result.features[0].geometry.coordinates, essential: true, zoom: 8})
+      let coords = result.features[0].geometry.coordinates;
+      this.state.aMap.flyTo({ center: coords, essential: true, zoom: 8});
+      result = await fetchCovidData('prisons', {}, {'date': this.state.endDate, 'sum': 'true', 'id': id});
+      handlePopup('prisons', coords, this.state.endDate, result, this.state.aMap);
     } else {
       let result = await fetch('http://localhost:8082/geojson/counties?fips=' + id);
       let location = await result.json();

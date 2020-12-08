@@ -10,7 +10,7 @@ module.exports = function handler(req, res) {
 
     // save route and query params.
     const { 
-        query: {date, sum, avg},
+        query: {date, sum, avg, id},
         params: {fips, name}
     } = req
 
@@ -63,7 +63,7 @@ module.exports = function handler(req, res) {
 
         if (request_params.date) {
             join = 'LEFT JOIN prison_covid pc ON p.id=pc.prison_id';
-            const whereClause = 'pc.dt < $' + paramIndex++;
+            const whereClause = '(pc.dt < $' + (paramIndex++) + ' OR pc.dt IS NULL) ';
             where = where.length ? where + ' AND ' + whereClause : 'WHERE ' + whereClause;
             query_params.push(request_params.date);
         }
@@ -80,12 +80,18 @@ module.exports = function handler(req, res) {
             query_params.push(name);
         }
 
+        if (id) {
+            const whereClause = `p.id=$` +  paramIndex++;
+            where = where.length ? where + ' AND ' + whereClause : 'WHERE ' + whereClause;
+            query_params.push(parseInt(id));
+        }
+
         if (aggregate_cols.length) {
             aggregate_cols += ', MAX(pc.dt) AS latest_dt';
         }
 
         query_string = `SELECT c.state, c.name, c.fips, p.name, p.id, p.population, p.latitude, p.longitude ${aggregate_cols} FROM prison p JOIN county c ON p.fips=c.fips ${join} ${where} ${group};`;
-
+        console.log(query_string);
         pool.query(query_string, query_params)
         .then((result) => {
             res.send(result.rows);
