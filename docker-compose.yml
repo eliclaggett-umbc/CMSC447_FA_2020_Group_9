@@ -29,7 +29,9 @@ services:
         - 8082:3000
       # restart: always
     database:
-      image: postgres
+      build:
+        context: ./
+        dockerfile: ./database/Dockerfile
       environment:
         POSTGRES_USER: root
         POSTGRES_PASSWORD: example

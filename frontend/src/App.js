@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import Search from './components/Search';
+import Loader from 'react-loader-spinner';
 
 mapboxgl.accessToken ='pk.eyJ1IjoiaGl3aWhhcmFyIiwiYSI6ImNraDJ6b2k4MTB0eWQyeXJ4NDcycWpodmUifQ.bxEz-zu7gz8jhCQLybK5bw';
 
@@ -167,20 +168,15 @@ export default class App extends React.Component {
     aMap: undefined,
     selectedCounty: undefined,
     selectedPrison: undefined,
+    containerClass: 'container',
+    fetchingClass: 'fetchingIndicator hidden'
     };
 
     this.handleDateChange = this.handleDateChange.bind(this);
     this.handleCovidTypeChange = this.handleCovidTypeChange.bind(this);
   };
 
-  // Make sure the container is available before using it for a map
-  componentDidMount() {
-    // Fix visual glitch from OpenMapTiles not showing anything for tiles that weren't downloaded
-
-    fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
-      this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") });
-    });
-
+  finishLoading = () => {
     const bounds = [
       -125.3321,
       23.8991,
@@ -341,10 +337,36 @@ export default class App extends React.Component {
     });
 
     this.setState({aMap: map});
-  }
+  };
+  // Make sure the container is available before using it for a map
+  componentDidMount() {
 
-  // Only explicitly call to create a new map if the map has been removed
-  componentDidUpdate() {if (this.state.aMap === undefined) {this.componentDidMount();}}
+    fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
+
+      if (result.all_cases) {
+        this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ","), fetchingClass: 'fetchingIndicator hidden', containerClass: 'container visible' });
+        this.finishLoading();
+      } else {
+        this.setState({fetchingClass: 'fetchingIndicator'});
+        let checkDoneLoading = setInterval(() => {
+          fetch('http://localhost:8082/api/is_fetching').then((result) => result.json()).then((result) => {
+            if (result.is_fetching == false && this.state.fetchingClass == 'fetchingIndicator') {
+              clearInterval(checkDoneLoading);
+              fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
+                this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ","), fetchingClass: 'fetchingIndicator hidden', containerClass: 'container visible' });
+              this.finishLoading();
+              });
+            } else if (result.is_fetching == false){
+              clearInterval(checkDoneLoading);
+            } else {
+
+            }
+          });
+        }, 2000);
+      }
+    });
+    
+  }
 
   handleCovidTypeChange = () => {
     // Change state to display updated info
@@ -389,7 +411,14 @@ export default class App extends React.Component {
   render() {
 
     return (
-            <div className="container">
+      <><div className={this.state.fetchingClass}><Loader
+      type="Puff"
+      color="#00BFFF"
+      height={100}
+      width={100}
+    /><span>Updating Database...</span><span className="subtext">This may take a while.</span></div>
+            <div className={this.state.containerClass}>
+              
               <div className="app-header">
                 <div className="app-title">
                   <h1 className="title">COVID-19 Prison Map</h1>
@@ -442,6 +471,7 @@ export default class App extends React.Component {
           <div className="more-item">Total cases: {this.state.allCases}</div>
         </div>
       </div>
+      </>
     );
   }
 }

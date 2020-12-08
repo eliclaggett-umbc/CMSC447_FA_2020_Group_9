@@ -74,6 +74,14 @@
     z-index: 10000;
     display: none;
 }
+
+@media only screen and (max-width: 600px) {
+    .resultList {
+        top: 3.4rem;
+        right: 4em;
+    }
+}
+
 .resultList div {
     display: flex;
     flex-direction: column;

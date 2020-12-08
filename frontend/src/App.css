@@ -1,6 +1,9 @@
 .App {
   text-align: center;
 }
+body {
+  background: linear-gradient(45deg, rgb(4 6 19) 0%, rgb(37 42 80) 100%);
+}
 
 .App-logo {
   height: 40vmin;
@@ -8,7 +11,47 @@
 }
 .container {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in, background-color 0.3s ease-in;
+  background-color: rgba(255,255,255 0);
+}
+.fetchingIndicator {
+  width: 30rem;
+  height: 30rem;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  background: rgb(0,0,0);
+  background: linear-gradient(45deg, rgb(18 16 35) 0%, rgb(24 49 97) 100%);
+  z-index: 100000;
+  color: #fff;
+  transform: translateX( -50% ) translateY(-50%);
+  border-radius: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 5rem rgb(16 16 47);
+  font-size: 1.5em;
+}
+.hidden {
+  display: none;
+}
+.visible {
+  visibility: visible;
+  opacity: 1;
+  background-color: #fff;
+}
+.fetchingIndicator div {
+  margin-bottom: 5rem;
+}
+.subtext {
+  opacity: 0.5;
+  font-size: 1rem;
 }
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
@@ -37,7 +80,8 @@
 }
 
 .mapContainer {
-  height: calc(100vh - 8rem);
+  height: 100vh;
+  flex-shrink: 1;
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -79,9 +123,9 @@
   align-items: center;
   margin-right: 1em;
 }
-.app-title {
+/* .app-title {
   width: 20%;
-}
+} */
 
 .app-tab {
   display: flex;
@@ -154,11 +198,11 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  height: 2em;
   z-index: 100;
   background: rgba(0,0,0,0.7);
   color: #fff;
   backdrop-filter: blur(1em);
+  padding: 1em 0;
 }
 
 .more-item {
@@ -195,6 +239,19 @@
   outline: -webkit-focus-ring-color auto 0px;
 }
 
+@media only screen and (max-width: 990px) {
+  .app-title {
+    width: 100%;
+    text-align: center;
+  }
+  .app-header {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-bottom: 1em;
+    height: auto;
+  } 
+}
+
 @media only screen and (max-width: 600px) {
 
   .app-header {
@@ -202,24 +259,12 @@
     display: flex;
     justify-content: space-between;
     background-color: #36617c;
-    padding: 0px 0px;
+    padding: 1em 0px;
     color: white;
   }
 
-  .app-title {
-    /* width: 100%; */
-  }
-
-  .title {
-    margin: 0 15px;
-  }
-  
-  .app-tab {
-    /* width: 100%; */
-  }
-
-  .search-tab {
-    width: 100%;
+  .header-search-input {
+    max-width: 8em;
   }
 
   .search-custom-position {
@@ -231,7 +276,7 @@
 
   .header-search-bar {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .date-picker {

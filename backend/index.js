@@ -5,6 +5,7 @@ const searchCounties = require('./api/search/counties.js');
 const searchPrisons = require('./api/search/prisons.js');
 const dataFetcher = require('./api/data_fetcher/fetch.js');
 const lastFetched = require('./api/data_fetcher/last_fetched.js');
+const isFetching = require('./api/data_fetcher/is_fetching.js');
 const geoJSONPrisons = require('./geojson/prisons.js');
 const geoJSONCounties = require('./geojson/counties.js');
 const stateRouter = require('./stateRouter.js');
@@ -51,6 +52,7 @@ app.get("/api/prisons/fips/:fips", prisons);
 app.use("/api/state/", stateRouter);
 app.get("/api/fetch_data", dataFetcher);
 app.get("/api/last_fetched", lastFetched);
+app.get("/api/is_fetching", isFetching);
 app.get("/api/search/counties", searchCounties);
 app.get("/api/search/prisons", searchPrisons);
 
