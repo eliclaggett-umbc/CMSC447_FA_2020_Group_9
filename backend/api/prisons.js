@@ -50,16 +50,16 @@ module.exports = function handler(req, res) {
         let paramIndex = 1;
 
         if (request_params.sum) {
-            aggregate_cols += ', SUM(pc.prisoner_tests) AS sum_prisoner_tests, SUM(pc.prisoner_cases) AS sum_prisoner_cases, SUM(pc.prisoner_deaths) AS sum_prisoner_deaths, SUM(pc.staff_tests) AS sum_staff_tests, SUM(pc.staff_cases) AS sum_staff_cases, SUM(pc.staff_deaths) AS sum_staff_deaths';
+            aggregate_cols += ', MAX(pc.prisoner_tests) AS sum_prisoner_tests, MAX(pc.prisoner_cases) AS sum_prisoner_cases, MAX(pc.prisoner_deaths) AS sum_prisoner_deaths, MAX(pc.staff_tests) AS sum_staff_tests, MAX(pc.staff_cases) AS sum_staff_cases, MAX(pc.staff_deaths) AS sum_staff_deaths';
             join = 'LEFT JOIN prison_covid pc ON p.id=pc.prison_id';
             group = 'GROUP BY p.id, c.fips';
         }
 
-        if (request_params.avg) {
-            aggregate_cols += ', AVG(pc.prisoner_tests) AS avg_prisoner_tests, AVG(pc.prisoner_cases) AS avg_prisoner_cases, AVG(pc.prisoner_deaths) AS avg_prisoner_deaths, AVG(pc.staff_tests) AS avg_staff_tests, AVG(pc.staff_cases) AS avg_staff_cases, AVG(pc.staff_deaths) AS avg_staff_deaths';
-            join = 'LEFT JOIN prison_covid pc ON p.id=pc.prison_id';
-            group = 'GROUP BY p.id, c.fips';
-        }
+        // if (request_params.avg) {
+        //     aggregate_cols += ', AVG(pc.prisoner_tests) AS avg_prisoner_tests, AVG(pc.prisoner_cases) AS avg_prisoner_cases, AVG(pc.prisoner_deaths) AS avg_prisoner_deaths, AVG(pc.staff_tests) AS avg_staff_tests, AVG(pc.staff_cases) AS avg_staff_cases, AVG(pc.staff_deaths) AS avg_staff_deaths';
+        //     join = 'LEFT JOIN prison_covid pc ON p.id=pc.prison_id';
+        //     group = 'GROUP BY p.id, c.fips';
+        // }
 
         if (request_params.date) {
             join = 'LEFT JOIN prison_covid pc ON p.id=pc.prison_id';

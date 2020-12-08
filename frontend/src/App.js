@@ -2,6 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import chroma from 'chroma-js';
 import mapboxgl, { LngLat } from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import React, { useEffect, useRef, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -94,8 +95,64 @@ async function fetchCovidData(searchBy, queryParams, filters) {
   };
 
 
-}
+};
+// create a popup on the map.
+function generatePopup(rows, location, map) {
 
+  var popupHTML = '';
+
+  popupHTML += '<h3>' + rows[0] + '</h3><div>';
+  for( let i = 1; i < rows.length; i++ ) {
+    popupHTML += `<span>${rows[i]}</span>`;
+  }
+  popupHTML += '</div>';
+  // console.log(location)
+
+  var popup = new mapboxgl.Popup()
+  .setLngLat(location)
+  .setHTML(popupHTML)
+  .addTo(map);
+  popup.on('close', function(e) {
+    map.setFilter('counties-highlighted', ['==', 'GEOID', '']);
+  });
+};
+function handlePopup(type, location, date, data, map) {
+
+  var rows = [];
+
+  if(!data.length) return;
+
+  if (type == 'counties') {
+
+        var county = data[0].name ? data[0].name : '';
+        var state = data[0].state ? data[0].state : '';
+        var cases = data[0].sum_cases ? data[0].sum_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+        var deaths = data[0].sum_deaths ? data[0].sum_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+       
+        rows.push(county + (county ? ', ' : '') + state);
+        rows.push(cases ? `Cases:  ${cases}` : '');
+        rows.push(deaths ? `Deaths: ${deaths}` : '');
+  }
+
+  if(type == 'prisons') {
+        var name = data[0].name ? data[0].name : '';
+        var county = data[0].state ? data[0].state : '';
+        var prisoner_cases = data[0].sum_prisoner_cases ? data[0].sum_prisoner_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+        var staff_cases = data[0].sum_staff_cases ? data[0].sum_staff_cases.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+        var prisoner_deaths = data[0].sum_prisoner_deaths ? data[0].sum_prisoner_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+        var staff_deaths = data[0].sum_staff_deaths ? data[0].sum_staff_deaths.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
+
+       
+        rows.push(name + (name ? ', ' : '') + county);
+        rows.push(prisoner_cases ? `Prisoner Cases:  ${prisoner_cases}` : '');
+        rows.push(staff_cases ? `Staff Cases:  ${staff_cases}` : '');
+        rows.push(prisoner_deaths ? `Prisoner Deaths: ${prisoner_deaths}` : '');
+        rows.push(staff_deaths ? `Staff Deaths: ${staff_deaths}` : '');
+  }
+
+      // create rows for popup
+      generatePopup(rows, location, map);
+};
 export default class App extends React.Component {
   // Initialize state and props, bind functions
   constructor(props) {
@@ -114,11 +171,16 @@ export default class App extends React.Component {
 
     this.handleDateChange = this.handleDateChange.bind(this);
     this.handleCovidTypeChange = this.handleCovidTypeChange.bind(this);
-  }
+  };
 
   // Make sure the container is available before using it for a map
   componentDidMount() {
     // Fix visual glitch from OpenMapTiles not showing anything for tiles that weren't downloaded
+
+    fetch('http://localhost:8082/api/total').then((result) => result.json()).then((result) => {
+      this.setState({ allCases: result.all_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ","), allDeaths: result.all_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") });
+    });
+
     const bounds = [
       -125.3321,
       23.8991,
@@ -137,8 +199,10 @@ export default class App extends React.Component {
 
     map.on("load", function() {
       // Hide watermark from the free version of OpenMapTiles
-      map.setPaintProperty('omt_watermark', 'text-color', 'rgba(0,0,0,0)');
-      map.setPaintProperty('omt_watermark', 'text-halo-color', 'rgba(0,0,0,0)');
+      if (map.getLayer("omt_watermark")) {
+        map.setPaintProperty('omt_watermark', 'text-color', 'rgba(0,0,0,0)');
+        map.setPaintProperty('omt_watermark', 'text-halo-color', 'rgba(0,0,0,0)');
+      }
       
       calculateCountyColorsForDate(endDate, covidType).then( (countyColors) => {
 
@@ -182,72 +246,13 @@ export default class App extends React.Component {
         map.addLayer({
           'id': 'pointLayer',
           'type': 'circle',
-          'source': 'points',
-          'paint': {
-            'circle-radius': 4,
-            'circle-color': 'rgba(255,0,0,0.5)'
-          }
+          'source': 'points'
         });
       });
 
     });
 
-    function handlePopup(type, location, date, data) {
-
-      var rows = [];
-
-      if(!data.length) return;
-
-      if (type == 'counties') {
-
-            var county = data[0].name ? data[0].name : '';
-            var state = data[0].state ? data[0].state : '';
-            var cases = data[0].sum_cases ? data[0].sum_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-            var deaths = data[0].sum_deaths ? data[0].sum_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-  
-           
-            rows.push(county + (county ? ', ' : '') + state);
-            rows.push(cases ? `Cases:  ${cases}` : '');
-            rows.push(deaths ? `Deaths: ${deaths}` : '');
-      }
-
-      if(type == 'prisons') {
-            var name = data[0].name ? data[0].name : '';
-            var county = data[0].state ? data[0].state : '';
-            var prisoner_cases = data[0].sum_prisoner_cases ? data[0].sum_prisoner_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-            var staff_cases = data[0].sum_staff_cases ? data[0].sum_staff_cases.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-            var prisoner_deaths = data[0].sum_prisoner_deaths ? data[0].sum_prisoner_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-            var staff_deaths = data[0].sum_staff_deaths ? data[0].sum_staff_deaths.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : '';
-  
-           
-            rows.push(name + (name ? ', ' : '') + county);
-            rows.push(prisoner_cases ? `Prisoner Cases:  ${prisoner_cases}` : '');
-            rows.push(staff_cases ? `Staff Cases:  ${staff_cases}` : '');
-            rows.push(prisoner_deaths ? `Prisoner Deaths: ${prisoner_deaths}` : '');
-            rows.push(staff_deaths ? `Staff Deaths: ${staff_deaths}` : '');
-      }
-
-          // create rows for popup
-          generatePopup(rows, location);
-    }
-
-    // create a popup on the map.
-    function generatePopup(rows, location){
-
-      var popupHTML = '';
-
-      popupHTML += '<h3>' + rows[0] + '</h3><div>';
-      for( let i = 1; i < rows.length; i++ ) {
-        popupHTML += `<span>${rows[i]}</span>`;
-      }
-      popupHTML += '</div>';
-      console.log(popupHTML);
-
-      var popup = new mapboxgl.Popup({offset: [0, -700]})
-      .setLngLat(location)
-      .setHTML(popupHTML)
-      .addTo(map);
-    }
+    
 
 
 
@@ -263,7 +268,7 @@ export default class App extends React.Component {
 
       // (searchby, queryparams, routeparams)
       var result = await fetchCovidData('prisons', {'fips': GEOID, 'name': name}, {'date': date, 'sum': true}).then( (result) => {
-        handlePopup('prisons', LngLatBounds.getCenter(), date, result);
+        handlePopup('prisons', LngLatBounds, date, result, map);
       })
 
       return result;
@@ -288,14 +293,11 @@ export default class App extends React.Component {
       var features = map.queryRenderedFeatures(e.point, { layers: ['pointLayer'] });
       if (features.length) {
         
-          handlePrisonClick(GEOID, features, LngLatBounds, this.state.endDate, {'sum': true}).then((result) => {
+          handlePrisonClick(GEOID, features, e.lngLat, this.state.endDate, {'sum': true}).then((result) => {
 
             this.setState({selectedPrison: result});
             
           });
-
-
-          
           // display county data
       } else {
 
@@ -307,7 +309,7 @@ export default class App extends React.Component {
           
           this.setState({selectedCounty: result});
   
-          handlePopup('counties', LngLatBounds.getCenter(), this.state.endDate, result);
+          handlePopup('counties', LngLatBounds.getCenter(), this.state.endDate, result, map);
           
           
         });
@@ -347,8 +349,22 @@ export default class App extends React.Component {
   }
 
 
-
-
+  handleSearch = async (type, id) => {
+    if (type == 'prison') {
+      let result = await fetch('http://localhost:8082/geojson/prisons?id=' + id);
+      result = await result.json();
+      this.state.aMap.flyTo({ center: result.features[0].geometry.coordinates, essential: true, zoom: 8})
+    } else {
+      let result = await fetch('http://localhost:8082/geojson/counties?fips=' + id);
+      let location = await result.json();
+      this.state.aMap.setFilter('counties-highlighted', ['==', 'GEOID', `${id}`]);
+      this.state.aMap.fitBounds(location, { padding: 150 });
+      
+      result = await fetchCovidData('counties', {'fips': id}, {'date': this.state.endDate, 'sum': 'true'});
+      let LngLatBounds = new mapboxgl.LngLatBounds(location[0], location[1]);
+      handlePopup('counties', LngLatBounds.getCenter(), this.state.endDate, result, this.state.aMap);
+    }
+  }
 
   render() {
 
@@ -359,8 +375,31 @@ export default class App extends React.Component {
                   <h1 className="title">COVID-19 Prison Map</h1>
                 </div>
                 <div className="app-tab">
+                  <div className="top-group">
+                  <Search className="header-search-bar" resultClick={(type, val) => this.handleSearch(type, val)}/>
+                  </div>
+                  <div className="bottom-group">
+                  <div className="tab-group">
+                    <span>Viewing:</span>
+                    <div
+                      className={`item-tab ${
+                        this.state.covidType === "sum_cases" ? "active-item" : ""
+                      }`}
+                      onClick={() => this.handleCovidTypeChange("sum_cases")}
+                    >
+                      Cases
+                    </div>
+                    <div
+                      className={`item-tab ${
+                        this.state.covidType === "sum_deaths" ? "active-item" : ""
+                      }`}
+                      onClick={() => this.handleCovidTypeChange("sum_deaths")}
+                    >
+                      Deaths
+                    </div>
+                  </div>
                   <div className="date-picker">
-                    <div>Date:</div>
+                    <span>Up to:</span>
                     <DatePicker
                       selected={this.state.endDate}
                       onChange={(date) => {
@@ -373,31 +412,14 @@ export default class App extends React.Component {
                       maxDate={this.state.currDate}
                     />
                   </div>
-                  <Search className="header-search-bar" />
-                  <div className="tab-group">
-                    <div
-                      className={`item-tab ${
-                        this.state.covidType === "sum_cases" ? "active-item" : ""
-                      }`}
-                      onClick={() => this.handleCovidTypeChange("sum_cases")}
-                    >
-                      Case
-                    </div>
-                    <div
-                      className={`item-tab ${
-                        this.state.covidType === "sum_deaths" ? "active-item" : ""
-                      }`}
-                      onClick={() => this.handleCovidTypeChange("sum_deaths")}
-                    >
-                      Death
-                    </div>
                   </div>
+                  
                 </div>        </div>
 
                 <div ref={this.state.mapContainer} className="mapContainer"></div>
         <div className="more-info">
-          <div className="more-item">total death: 0</div>
-          <div className="more-item">total cases: 0</div>
+                    <div className="more-item">Total deaths: {this.state.allDeaths}</div>
+          <div className="more-item">Total cases: {this.state.allCases}</div>
         </div>
       </div>
     );

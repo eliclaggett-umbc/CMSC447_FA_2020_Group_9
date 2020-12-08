@@ -56,26 +56,27 @@ export default class Search extends React.Component {
 
     return (
       <div className="header-search-bar">
+        
+        <input
+          className="header-search-input"
+          placeholder="Search"
+          onChange={this.handleSearchQuery.bind(this)}
+        ></input>
+        {/* <i className="fa fa-search search-custom-position" aria-hidden="true"></i> */}
+
+        { <div className={styles.resultList}><div>
+          {elements.map((elem, index) => (
+            <ResultListElement key={index} data={elem} onClick={this.props.resultClick}/>
+          ))}
+        </div></div> }
         <select
           value={this.state.searchBy}
           onChange={this.handleSearchOn.bind(this)}
           className="select-search"
         >
-          <option value="counties">counties</option>
-          <option value="prisons">prisons</option>
+          <option value="counties">Counties</option>
+          <option value="prisons">Prisons</option>
         </select>
-        <input
-          className="header-search-input"
-          placeholder="search"
-          onChange={this.handleSearchQuery.bind(this)}
-        ></input>
-        {/* <i className="fa fa-search search-custom-position" aria-hidden="true"></i> */}
-
-        { <div className={styles.resultList}>
-          {elements.slice(0,maxResults).map((elem, index) => (
-            <ResultListElement key={index} data={elem} />
-          ))}
-        </div> }
       </div>
     );
   }
@@ -84,7 +85,11 @@ export default class Search extends React.Component {
 const ResultListElement = (props) => {
   // console.log(props);
   return (
-    <button className={`${styles.button} ${styles.resultListElement}`}>
+    <button onClick={() => {
+      let val = props.data.prison_name ? props.data.id : props.data.fips;
+      let type = props.data.prison_name ? 'prison' : 'county';
+      props.onClick(type, val);
+    }} className={`${styles.button} ${styles.resultListElement}`}>
       <p>
         {props.data.prison_name
           ? props.data.prison_name +
