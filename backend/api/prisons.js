@@ -91,7 +91,6 @@ module.exports = function handler(req, res) {
         }
 
         query_string = `SELECT c.state, c.name, c.fips, p.name, p.id, p.population, p.latitude, p.longitude ${aggregate_cols} FROM prison p JOIN county c ON p.fips=c.fips ${join} ${where} ${group};`;
-        console.log(query_string);
         pool.query(query_string, query_params)
         .then((result) => {
             res.send(result.rows);
