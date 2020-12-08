@@ -177,15 +177,31 @@ export default class App extends React.Component {
         
         map.addSource('points', {
           type: "geojson",
-          data: 'http://localhost:8082/geojson/prisons'
+          data: 'http://localhost:8082/geojson/prisons',
+          cluster: true,
+          clusterMaxZoom: 14, 
+          clusterRadius: 5 
         });
         map.addLayer({
-          'id': 'pointLayer',
+          'id': 'clusters',
           'type': 'circle',
           'source': 'points',
           'paint': {
-            'circle-radius': 4,
-            'circle-color': 'rgba(255,0,0,0.5)'
+            'circle-color': 'hsla(359, 89%, 7%, 0.72)',
+            'circle-radius': [
+              "interpolate",
+              ["linear"],
+              [
+                "get", 
+                'point_count'
+              ],
+              0,
+              10,
+              50,
+              60
+              ]
+                          
+            
           }
         });
       });
