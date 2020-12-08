@@ -1,3 +1,4 @@
+const total = require('./api/total.js');
 const prisons = require('./api/prisons.js');
 const counties = require('./api/counties.js');
 const searchCounties = require('./api/search/counties.js');
@@ -40,6 +41,7 @@ app.listen(3000, () => {
  console.log("Server running on port 3000");
 });
 
+app.get("/api/total", total);
 app.get("/api/prisons", prisons);
 app.get("/api/counties", counties);
 // added line

@@ -52,16 +52,16 @@ module.exports = function handler(req, res) {
 
 
         if (request_params.sum) {
-            aggregate_cols += ', SUM(cc.cases) as sum_cases, SUM(cc.deaths) as sum_deaths';
+            aggregate_cols += ', MAX(cc.cases) as sum_cases, MAX(cc.deaths) as sum_deaths';
             join = 'LEFT JOIN county_covid cc ON cc.fips=c.fips';
             group = 'GROUP BY c.fips';
         }
 
-        if (request_params.avg) {
-            aggregate_cols += ', AVG(cc.cases) as avg_cases, AVG(cc.deaths) as avg_deaths';
-            join = 'LEFT JOIN county_covid cc ON cc.fips=c.fips';
-            group = 'GROUP BY c.fips';
-        }
+        // if (request_params.avg) {
+        //     aggregate_cols += ', AVG(cc.cases) as avg_cases, AVG(cc.deaths) as avg_deaths';
+        //     join = 'LEFT JOIN county_covid cc ON cc.fips=c.fips';
+        //     group = 'GROUP BY c.fips';
+        // }
 
         if (request_params.date) {
             join = 'LEFT JOIN county_covid cc ON cc.fips=c.fips';
