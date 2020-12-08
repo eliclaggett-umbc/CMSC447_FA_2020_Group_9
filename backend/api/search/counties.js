@@ -18,7 +18,7 @@ module.exports = function handler(req, res) {
     let query_params = [];
 
     if(req.method == "GET") {
-        query_string = `SELECT c.fips, c.name, c.state, c.population FROM county c WHERE c.name LIKE $1`;
+        query_string = `SELECT c.fips, c.name, c.state, c.population FROM county c WHERE LOWER(c.name) LIKE LOWER($1)`;
         query_params.push('%' + request_params.search + '%');
         
         pool.query(query_string, query_params)

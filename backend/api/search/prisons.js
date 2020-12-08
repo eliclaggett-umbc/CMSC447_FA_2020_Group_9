@@ -18,7 +18,7 @@ module.exports = function handler(req, res) {
 
     if(req.method == "GET") {
         
-        query_string = `SELECT p.id, p.name AS prison_name, p.fips, c.name AS county_name, c.state FROM prison p JOIN county c ON p.fips=c.fips WHERE p.name LIKE $1`;
+        query_string = `SELECT p.id, p.name AS prison_name, p.fips, c.name AS county_name, c.state FROM prison p JOIN county c ON p.fips=c.fips WHERE LOWER(p.name) LIKE LOWER($1)`;
 
         query_params.push('%' + request_params.search + '%');
         
