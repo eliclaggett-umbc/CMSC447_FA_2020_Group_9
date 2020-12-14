@@ -54,7 +54,4 @@ Prison COVID Data:
 https://raw.githubusercontent.com/uclalawcovid19behindbars/data/master/Adult%20Facility%20Counts/adult_facility_covid_counts_today_latest.csv
 https://docs.google.com/spreadsheets/d/1X6uJkXXS-O6eePLxw2e4JeRtM41uPZ2eRcOA_HkPVTk/gviz/tq?tqx=out:csv&sheet=COVID-19%20Jail%2FPrison%20Confirmed%20Cases%20and%20Deaths
 
-+ recidiviz
-
 County COVID Data: https://github.com/nytimes/covid-19-data
-
